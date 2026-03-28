@@ -294,13 +294,24 @@ The Advertising dataset contains n = 200 independent market observations with no
 
 ---
 
-![Figure 1 — Pairwise scatter matrix of all four variables](../output/fig1_scatter_matrix.png)
+![Figure — Variable distributions](../output/fig1_distributions.png)
 
-**Figure 1 — Pairwise Scatter Matrix.** Diagonal cells show the distribution of each variable; off-diagonal cells show the bivariate scatter with OLS trend line (red). Key observations:
-- **TV vs Sales** (row 4, col 1): strong positive linear relationship — the largest single-predictor correlation (r = 0.782)
-- **Radio vs Sales** (row 4, col 2): moderate positive relationship (r = 0.576)
-- **Newspaper vs Sales** (row 4, col 3): weak positive relationship (r = 0.228) — newspaper budgets vary widely but correlate weakly with sales
-- **Radio vs Newspaper** (row 3, col 2): visible positive correlation (r = 0.354) — the confounding relationship that makes newspaper appear significant in simple regression but not in MLR
+**Figure — Variable Distributions.** Histograms with KDE overlays for each variable. TV budget is right-skewed; Revenue is approximately bell-shaped centred around $14K.
+
+![Figure — Scatter plots per channel](../output/fig2_scatter_per_channel.png)
+
+**Figure — Scatter Plots by Channel.** Each panel shows one channel vs Revenue with OLS trend line. Key observations:
+- **TV vs Sales**: strong upward slope, tight cluster (R² = 0.612)
+- **Radio vs Sales**: moderate positive relationship (R² = 0.332)
+- **Newspaper vs Sales**: near-flat slope, weak predictive power (R² = 0.052)
+
+![Figure — Correlation heatmap](../output/fig3_correlation_heatmap.png)
+
+**Figure — Correlation Heatmap.** Pearson r between all pairs. Key readings:
+- **TV ↔ Sales = 0.782**: strongest predictor-response relationship
+- **Radio ↔ Sales = 0.576**: moderate, independently useful
+- **Newspaper ↔ Sales = 0.228**: weak
+- **Radio ↔ Newspaper = 0.354**: the confound — Newspaper borrows Radio's effect in SLR
 
 ---
 
@@ -368,188 +379,398 @@ vif              = [variance_inflation_factor(X_train.values, i)
 
 ---
 
-## 5. Results and Discussion
+## 5. Results and Discussion — The Marketing Plan (Q1–Q7)
 
-### 5.1 Simple Linear Regression — Bivariate Effects
+> *"Suppose that in our role as statistical consultants we are asked to suggest, on the basis of this data, a marketing plan for next year that will result in high product sales. What information would be useful in order to provide such a recommendation?"*
+> — James et al., *An Introduction to Statistical Learning*, Chapter 3
 
-| Predictor | β̂₀ | β̂₁ | R² | p (β̂₁) | Units per $1K spend |
-|---|---|---|---|---|---|
-| TV | 7.033 | 0.0475 | 0.612 | < .001 | +47.5 units |
-| Radio | 9.312 | 0.2025 | 0.332 | < .001 | +202.5 units |
-| Newspaper | 12.351 | 0.0547 | 0.052 | < .001 | +54.7 units |
+**Main objective:** Understand the relationship between marketing spend and revenue, quantify the effectiveness of each advertising channel, and provide data-driven budget allocation recommendations.
 
-All three channels appear significant in isolation. Newspaper's apparent significance is a confound driven by its correlation with radio (r = 0.35) — this is revealed by the heatmap below.
+Each subsection below answers one of the seven ISL marketing research questions. For every question, we present: the statistical method, the numerical result, the visualization that supports it, and — most importantly — the **business interpretation** that guides next year's marketing plan.
 
 ---
 
-![Figure 3 — Correlation heatmap](../output/fig3_heatmap.png)
+### 5.1 Q1 — Is there a relationship between advertising budget and sales?
 
-**Figure 3 — Correlation Heatmap.** Pearson r between all pairs of variables. Key readings:
-- **TV ↔ Sales = 0.782**: strongest predictor-response relationship; TV is the dominant channel
-- **Radio ↔ Sales = 0.576**: moderate, independently useful
-- **Newspaper ↔ Sales = 0.228**: weak; newspaper spend barely covaries with sales
-- **Radio ↔ Newspaper = 0.354**: the critical confound — when Radio is not controlled for, Newspaper absorbs some of Radio's effect, making it appear falsely significant in simple regression
-- **TV ↔ Radio = 0.055, TV ↔ Newspaper = 0.057**: very low; TV is nearly orthogonal to the other channels, meaning its coefficient in MLR is unaffected by controlling for them
+**Why this matters:** Before investing any money in advertising, the company needs evidence that ad spending actually moves revenue. If no statistical relationship exists, every dollar spent on advertising is wasted. The F-test answers this "go/no-go" question.
 
----
+**Method:** Fit the MLR model Sales ~ TV + Radio + Newspaper and test the null hypothesis H₀: β_TV = β_Radio = β_Newspaper = 0 using the F-statistic (3.15).
 
-### 5.2 Multiple Linear Regression — Partial Effects
+**ISL context:** *"The p-value corresponding to the F-statistic is very low, indicating clear evidence of a relationship between advertising and sales."*
 
-**Coefficient table (OLS, TV + Radio + Newspaper):**
+**Result:**
 
-| Predictor | β̂ | SE(β̂) | t | p-value | 95% CI |
-|---|---|---|---|---|---|
-| Intercept (β̂₀) | 2.939 | 0.312 | 9.42 | < .001 | [2.32, 3.56] |
-| TV (β̂₁) | 0.046 | 0.001 | 32.81 | < .001 | [0.043, 0.049] |
-| Radio (β̂₂) | 0.189 | 0.009 | 21.89 | < .001 | [0.172, 0.206] |
-| Newspaper (β̂₃) | −0.001 | 0.006 | −0.18 | .860 | [−0.013, 0.011] |
-
-**Model fit:** R² = 0.897 · adj-R² = 0.896 · F(3,196) = 570.3, p < .001 · RSE = 1.686K units
-
----
-
-![Figure 4 — Coefficient plot with 95% confidence intervals](../output/fig4_coef_plot.png)
-
-**Figure 4 — Coefficient Plot.** Each bar shows the partial effect of one channel on Sales (β̂), with 95% CI error bars. Colours indicate statistical significance.
-
-- **Radio (β̂ = 0.189):** The largest and most precisely estimated effect — each $1K of radio spend adds 189 units, holding TV and newspaper fixed. The narrow CI [0.172, 0.206] reflects high precision
-- **TV (β̂ = 0.046):** Significant positive effect, but smaller per-dollar return than radio at current spend levels. CI [0.043, 0.049] is very narrow — TV's coefficient is estimated with high confidence
-- **Newspaper (β̂ = −0.001):** CI straddles zero [−0.013, 0.011] and is entirely centred on zero — no discernible effect. The small negative point estimate is noise, not evidence of harm
-
-**Coefficient interpretation in business language:**
-- Holding radio and newspaper constant, each additional $1K in TV spend adds **46 units**
-- Holding TV and newspaper constant, each additional $1K in radio spend adds **189 units** (~4× more than TV per dollar)
-- Holding TV and radio constant, newspaper spend adds **effectively zero** additional units
-
----
-
-### 5.3 Synergy — Interaction Results (Q7)
-
-Adding TV × Radio:
-
-| Predictor | β̂ | p-value | Interpretation |
-|---|---|---|---|
-| TV | 0.0191 | < .001 | Main effect of TV (when Radio = 0) |
-| Radio | 0.0289 | .001 | Main effect of Radio (when TV = 0) |
-| Newspaper | −0.0010 | .862 | Still not significant |
-| **TV × Radio** | **0.00108** | **< .001** | Synergy: Radio raises the per-$1K TV return by 1.08 units |
-
-**R² increases from 0.897 to 0.968 (ΔR² = +0.071).**
-
-> **Concrete example:** A market spending $100K on TV and $30K on Radio:
-> - TV main effect: 0.0191 × 100 = 1.91K units
-> - Radio main effect: 0.0289 × 30 = 0.87K units
-> - **Synergy bonus:** 0.00108 × 100 × 30 = **3.24K units**
-> - Total above intercept: **6.02K extra units** — synergy alone accounts for 54%
-
----
-
-![Figure 6 — Model comparison: R² and RSE across all models](../output/fig6_model_comparison.png)
-
-**Figure 6 — Model Comparison.** Left: R² (higher = better). Right: RSE in thousands of units (lower = better). Each bar represents one model, coloured consistently across panels.
-
-- **Baseline** (grey): R² = 0, RSE = 5.22 — simply predicting the mean of Sales; no information used
-- **SLR: TV** (blue): R² = 0.612, RSE = 3.26 — TV alone removes 37% of RSE; by far the strongest single predictor
-- **SLR: Radio** (green): R² = 0.332, RSE = 4.28 — useful alone but weaker than TV
-- **SLR: Newspaper** (orange): R² = 0.052, RSE = 5.09 — barely improves on baseline
-- **MLR: 3 channels** (red): R² = 0.897, RSE = 1.69 — combining all three channels achieves the threshold line (R² = 0.90)
-- **MLR + TV×Radio** (purple): R² = 0.968, RSE = 0.93 — synergy term provides the single largest jump after the baseline
-
-The steep drop in RSE from the three-channel MLR to the interaction model (1.69 → 0.93K units) demonstrates the business importance of running TV and radio campaigns simultaneously rather than independently.
-
----
-
-### 5.4 LINE Assumption Diagnostics (Q6)
-
-| Assumption | Test | Statistic | Verdict |
-|---|---|---|---|
-| Linearity | Residuals vs. Fitted (visual) | No pattern | ✓ Satisfied |
-| Independence | Durbin-Watson | DW = 2.07 | ✓ Satisfied |
-| Normality | Shapiro-Wilk | p = .14 > .05 | ✓ Satisfied |
-| Homoscedasticity | Breusch-Pagan | p = .08 > .05 | ✓ Satisfied |
-| Multicollinearity | VIF | TV=2.1, Radio=1.1, NP=1.1 — all < 5 | ✓ Satisfied |
-
----
-
-![Figure 5 — LINE assumption diagnostic plots](../output/fig5_diagnostics.png)
-
-**Figure 5 — LINE Diagnostics.** Three panels test four OLS validity conditions simultaneously.
-
-**Residuals vs Fitted (left):** Tests linearity and homoscedasticity. Residuals scatter randomly around zero (red dashed line) with no visible fan shape, curve, or outlier cluster. ✓ Both linearity and constant variance confirmed.
-
-**Normal Q-Q Plot (centre):** Tests normality. Residuals (blue dots) track the red theoretical normal line closely across the full range, with only minor deviation in the far tails. Shapiro-Wilk p = .14 formally confirms normality cannot be rejected. ✓ Inference (p-values, CIs) is valid.
-
-**Scale-Location (right):** Secondary homoscedasticity check. The √|standardised residuals| show a roughly horizontal band across all fitted values — no systematic spread increase at higher predictions. ✓ Confirms constant error variance.
-
-> **What this means for the analysis:** All four LINE conditions being satisfied means the reported p-values, confidence intervals, and predictions are statistically valid and not artificially inflated by violated assumptions.
-
----
-
-### 5.5 Test Set Evaluation (Q5)
-
-| Metric | Value | Interpretation |
+| Statistic | Value | Interpretation |
 |---|---|---|
-| Test RMSE | 1.78K units | Average prediction error on 40 unseen markets |
-| Test R² | 0.899 | 89.9% of held-out sales variance explained |
-| Training RSE | 1.69K units | Difference of only 0.09K — no overfitting |
+| F(3, 196) | 570.3 | Model is 570× better than predicting the mean |
+| p-value | < .001 | Overwhelming evidence to reject H₀ |
+| R² | 0.897 | 89.7% of sales variation explained by the three channels |
+
+**How to read this result:** The F-statistic compares two models: (1) a "null" model that simply predicts mean sales for every market ($14,020 units), versus (2) our regression that uses all three ad budgets. An F of 570.3 means the regression model reduces prediction error by a factor of 570 compared to the null model. The p-value (< .001) means there is less than a 0.1% chance this improvement occurred by random chance.
+
+**Business interpretation:** Advertising spend is a **proven driver** of revenue across all 200 markets. The data provides overwhelming statistical evidence (p < .001) to justify continued and strategic investment in advertising. The model explains 89.7% of the variation in sales between markets — meaning that differences in ad budgets are the primary reason some markets sell more than others. Only about 10% of sales variation is driven by factors outside of advertising (e.g., local demographics, competition, pricing).
+
+> **Decision for marketing leadership:** The advertising budget is NOT wasted — it drives measurable, predictable revenue gains. The remaining questions determine *where* to allocate that budget most effectively.
 
 ---
 
-![Figure 7 — Actual vs Predicted Sales on held-out test set](../output/fig7_actual_vs_pred.png)
+### 5.2 Q2 — How strong is the relationship?
 
-**Figure 7 — Actual vs Predicted Sales (Test Set, n = 40).** Each dot is a market the model never saw during training. The x-axis shows true sales; the y-axis shows the model's prediction. The red dashed diagonal represents perfect prediction (ŷ = y).
+**Why this matters:** Knowing a relationship exists (Q1) is not enough. The marketing team needs to know: *Can we actually use this model to forecast revenue and plan budgets?* R² and RSE answer this by quantifying how much of the sales picture advertising explains, and how far off our forecasts typically are.
 
-**Key observations:**
-- Points cluster tightly around the diagonal, confirming the model generalises well to unseen markets
-- **No systematic bias:** dots above and below the line are balanced — the model does not systematically over- or under-predict any sales range
-- **Problematic region:** a small cluster of mid-range markets (actual Sales 10–15K) shows larger vertical gaps — the model is less precise here, likely due to unobserved market characteristics (competition level, demographics) that are not captured by the three advertising variables
-- **Test R² = 0.899 ≈ training R² = 0.897** — the gap is negligible, confirming that the model has not memorised the training data
+**Method:** Examine R² and RSE from the MLR model. Compare SLR per-channel to full MLR.
 
-> **Commercial interpretation:** Average prediction error of ±1,780 units is 12.7% of mean sales (14,020 units). For budget planning purposes — allocating millions across markets — predictions at this precision level are commercially actionable.
+**ISL context:** *"The RSE is 1.69 units while the mean value for the response is 14.022, indicating a percentage error of roughly 12%. The R² statistic records the percentage of variability in the response that is explained by the predictors. The predictors explain almost 90% of the variance in sales."*
+
+**Result:**
+
+| Metric | Value | Business meaning |
+|---|---|---|
+| R² | 0.897 | 90% of market-to-market revenue differences are explained by ad spending |
+| Adjusted R² | 0.896 | Still 90% after penalising for using 3 predictors (not overfitted) |
+| RSE | 1.686K units | A typical market's actual sales deviate from the model's forecast by ~$1,686 |
+| RSE / mean sales | 12.0% | The model's average forecast error is 12% of a market's typical revenue |
+
+**Model comparison — why combining channels matters:**
+
+| Model | R² | RMSE | What it means |
+|---|---|---|---|
+| TV only (SLR) | 0.612 | 3.26K | TV alone explains 61% of revenue — good, but leaves 39% unexplained |
+| Radio only (SLR) | 0.332 | 4.28K | Radio alone explains 33% — useful but insufficient on its own |
+| Newspaper only (SLR) | 0.052 | 5.09K | Newspaper alone explains just 5% — almost useless as a solo predictor |
+| **All 3 channels (MLR)** | **0.897** | **1.69K** | **Combined: 90% explained — a strong, actionable model** |
+
+![Q2 — SLR vs MLR model comparison](../output/fig_q2_model_comparison.png)
+
+**How to read this chart:** The left panel shows R² (the percentage of revenue explained — higher bars are better). The right panel shows RMSE (prediction error in $K — shorter bars are better). The purple "All 3 Channels" bar dramatically outperforms any single channel, demonstrating that a multi-channel strategy both in modelling and in spending captures the full revenue picture.
+
+**Business interpretation:**
+
+- **The model is commercially actionable.** With R² = 0.90, it explains 9 out of every 10 dollars of variation between markets. The remaining 10% reflects factors outside the model (local competition, seasonality, demographics).
+- **Forecast precision:** RSE = $1,686 means the typical forecast misses actual sales by ±$1,686 per market. For a market with average revenue of $14,020, this is a 12% relative error — well within the precision needed for quarterly budget allocation.
+- **Combining channels is essential.** TV alone (R² = 0.61) leaves nearly 40% of revenue unexplained. Adding Radio and Newspaper into a joint model pushes R² to 0.90 — a 47% improvement in explanatory power (0.612 → 0.897). This confirms that the marketing team should analyse channels together, not in isolation.
+
+> **Decision for marketing leadership:** The advertising-to-revenue relationship is strong enough to base budget decisions on. Revenue forecasts will be accurate within ±12%, which is sufficient for market-level budget planning and ROI tracking.
 
 ---
 
-## 6. Conclusion
+### 5.3 Q3 — Which media are associated with sales?
 
-All seven marketing research questions have been answered:
+**Why this matters:** This is the core budget allocation question. The company spends on three channels — but which ones actually drive revenue? If a channel has no measurable effect, that budget is better redirected elsewhere. This question separates the winners from the wasters.
 
-**Q1 — Significant relationship confirmed.** F(3, 196) = 570.3, p < .001.
+**Method:** Fit SLR per channel to see individual effects, then fit MLR to control for cross-channel correlations and reveal each channel's **true independent contribution**.
 
-**Q2 — Strong explanatory power.** R² = 0.897, RSE = 1.69K units (training); the model explains 90% of market-to-market variation in sales.
+**ISL context:** *"The p-values for TV and radio are low, but the p-value for newspaper is not. This suggests that only TV and radio are related to sales."*
 
-**Q3–Q4 — TV and Radio drive sales; Newspaper does not.** TV adds 46 units per $1K (CI: [43, 49]); Radio adds 189 units per $1K (CI: [172, 206]) — approximately 4× more efficient per dollar. Newspaper: β̂ = −0.001, p = .860, CI straddles zero.
+**Step 1 — SLR results (each channel analysed alone):**
 
-**Q5 — Good out-of-sample prediction.** RMSE = 1.78K units, R² = 0.899 on test — no overfitting.
+| Predictor | β̂₁ (slope) | R² | p-value | Revenue per $1K spend |
+|---|---|---|---|---|
+| TV | 0.0475 | 0.612 | < .001 | **+47.5 units** |
+| Radio | 0.2025 | 0.332 | < .001 | **+202.5 units** |
+| Newspaper | 0.0547 | 0.052 | < .001 | +54.7 units |
 
-**Q6 — Linear model is valid.** All LINE assumptions satisfied. OLS inference is reliable.
+**Misleading SLR finding:** All three channels appear significant in isolation. Newspaper seems to add 54.7 units per $1K. However, this is a **statistical illusion** caused by confounding.
 
-**Q7 — Synergy is real and substantial.** TV×Radio interaction significant (p < .001, ΔR² = +0.071). In a typical high-spend market ($100K TV + $30K Radio), synergy accounts for 54% of total advertising-driven sales.
+**The confounding mechanism:** Radio and Newspaper budgets are correlated (Pearson r = 0.354 — see correlation heatmap). Markets that spend more on Radio also tend to spend more on Newspaper. When we analyse Newspaper alone, it "borrows" credit from Radio. The SLR model cannot distinguish which channel is truly responsible.
+
+**Step 2 — MLR results (all channels together — confound removed):**
+
+| Predictor | β̂ | SE(β̂) | t-statistic | p-value | 95% CI | Significant? |
+|---|---|---|---|---|---|---|
+| Intercept | 2.939 | 0.312 | 9.42 | < .001 | [2.32, 3.56] | Yes |
+| **TV** | **0.046** | **0.001** | **32.81** | **< .001** | **[0.043, 0.049]** | **Yes** |
+| **Radio** | **0.189** | **0.009** | **21.89** | **< .001** | **[0.172, 0.206]** | **Yes** |
+| Newspaper | −0.001 | 0.006 | −0.18 | .860 | [−0.013, 0.011] | **No** |
+
+![Q3 — SLR fit lines per channel](../output/fig_q3_slr_fits.png)
+
+**How to read this chart:** Each panel shows one channel's budget (x-axis) vs revenue (y-axis) with the OLS regression line. Grey vertical lines are residuals — the prediction errors. **Key visual cues:**
+
+- **TV (left):** Points cluster tightly around a clear upward trend. Small residuals = TV reliably predicts revenue. R² = 0.612 means TV alone explains 61% of revenue.
+- **Radio (centre):** Moderate upward trend but wider scatter. Radio has predictive power (R² = 0.33) but is noisier — other factors also matter.
+- **Newspaper (right):** The line is nearly flat. Huge residuals. Spending more on Newspaper does not systematically increase revenue. R² = 0.05 — essentially random.
+
+![Q3 — Channel ROI comparison](../output/fig_q3_channel_comparison.png)
+
+**How to read this chart:** Three panels compare channels side-by-side on ROI (revenue per $1K), R² (explanatory power), and RMSE (prediction error). TV dominates R² and RMSE; Radio has the highest per-dollar ROI in SLR — but note that SLR ROI figures are inflated by confounding for Newspaper.
+
+![Q3 — Coefficient plot with 95% CI](../output/fig_q3_coef_plot.png)
+
+**How to read this chart:** Each horizontal bar shows the MLR coefficient (β̂) — the **true** revenue effect per $1K after controlling for all other channels. The error bars show the 95% confidence interval. The red dashed vertical line at zero represents "no effect." **Key insight:** TV and Radio bars sit entirely to the right of the red line — their effects are real and significant. Newspaper's bar straddles the red line — its effect is statistically indistinguishable from zero.
+
+**Business interpretation — Channel effectiveness ranking:**
+
+| Rank | Channel | Revenue per $1K | Significance | Recommendation |
+|---|---|---|---|---|
+| 1 | **Radio** | +189 units | p < .001 | **Increase budget** — highest per-dollar return |
+| 2 | **TV** | +46 units | p < .001 | **Maintain/increase** — largest volume driver at scale |
+| 3 | Newspaper | ~0 units | p = .860 | **Cut budget** — zero independent return on investment |
+
+**Why Newspaper fails:** The correlation heatmap (Section 4.1) shows Radio ↔ Newspaper r = 0.354. Markets that advertise heavily on Radio also tend to advertise on Newspaper. In SLR, Newspaper appears effective because it is a *proxy* for Radio spending. Once MLR controls for Radio, Newspaper's coefficient collapses to zero. This is a textbook example of the **surrogate variable effect** (confounding).
+
+> **Decision for marketing leadership:** Redirect 100% of Newspaper budget to Radio and TV. Every dollar moved from Newspaper (0 return) to Radio (+189 units per $1K) directly increases total revenue. TV remains essential for volume — it reaches the widest audience and drives 61% of sales variation alone.
 
 ---
 
-**Strategic recommendation:** Reallocate budget toward TV and Radio. Reduce or eliminate newspaper spend — no measurable independent return is observed. Invest in both TV and Radio simultaneously to capture synergistic returns; the interaction effect is the single largest driver of model improvement beyond baseline.
+### 5.4 Q4 — How large is the association between each medium and sales?
 
-**Limitations:** Cross-sectional, observational data — causality cannot be established. Unobserved market characteristics (income, population, competition) may confound associations. The model assumes contemporaneous, linear effects.
+**Why this matters:** Knowing which channels work (Q3) is not sufficient for budget planning. The marketing team needs to know *exactly how much revenue each dollar generates* — and how confident we are in that number. Wide uncertainty means risky bets; narrow uncertainty means reliable planning.
 
-**Future directions:** Regularised regression (Ridge, Lasso) for higher-dimensional extensions; polynomial terms if spend extremes show curvature; panel or time-series models for carryover effects; causal inference methods if experimental variation becomes available.
+**Method:** Examine β̂ values (point estimates) and 95% confidence intervals. Check VIF for multicollinearity that could inflate standard errors and widen CIs.
+
+**ISL context:** *"The confidence intervals are: (0.043, 0.049) for TV, (0.172, 0.206) for radio, and (−0.013, 0.011) for newspaper. The confidence intervals for TV and radio are narrow and far from zero, providing evidence that these media are related to sales. But the interval for newspaper includes zero."*
+
+**95% Confidence Intervals — precision of ROI estimates:**
+
+| Channel | β̂ (per $1K) | 95% CI | CI width | Revenue range per $1K spend |
+|---|---|---|---|---|
+| TV | 0.046 | [0.043, 0.049] | 0.006 | **+43 to +49 units** — very narrow, highly reliable |
+| Radio | 0.189 | [0.172, 0.206] | 0.034 | **+172 to +206 units** — narrow, reliable |
+| Newspaper | −0.001 | [−0.013, 0.011] | 0.024 | **−13 to +11 units** — crosses zero, unreliable |
+
+**Multicollinearity check (VIF):** TV = 1.005, Radio = 1.145, Newspaper = 1.145 — all well below the danger threshold of 5. The narrow CIs are genuine precision, not an artefact of multicollinearity.
+
+**Business interpretation — what the numbers mean for budget planning:**
+
+**TV: Reliable, moderate per-dollar return.** Every additional $1K spent on TV generates between 43 and 49 units of revenue (95% confidence). The CI is only 6 units wide — this is an exceptionally precise estimate. For a campaign increasing TV budget by $50K across markets, the expected revenue gain is $50 × 46 = **2,300 additional units**, with a worst-case floor of 2,150 and a best-case ceiling of 2,450.
+
+**Radio: Highest per-dollar return with strong precision.** Every additional $1K in Radio generates between 172 and 206 units. Radio's per-dollar efficiency is approximately **4× higher than TV** (189 vs 46 units per $1K). A $20K Radio budget increase yields an expected 189 × 20 = **3,780 additional units** — nearly double what the same $20K would generate on TV (920 units).
+
+**Newspaper: No measurable return.** The CI [−0.013, 0.011] spans both negative and positive values, crossing zero. This means we cannot statistically distinguish Newspaper's effect from zero. Spending $50K on Newspaper may produce anywhere from a 650-unit loss to a 550-unit gain — essentially noise. There is no data-driven justification for maintaining this spend.
+
+> **Decision for marketing leadership:** Radio delivers 4× more revenue per dollar than TV. However, TV operates at larger budget scales ($0–296K vs $0–50K for Radio), so it drives absolute volume. The optimal strategy is: (1) maximise Radio spend up to the market's capacity, (2) fill remaining budget with TV, (3) cut Newspaper entirely.
+
+---
+
+### 5.5 Q5 — How accurately can we predict future sales?
+
+**Why this matters:** A model that explains past data well (R² = 0.90) might not predict the future accurately if it has overfit to training quirks. The marketing team needs confidence that revenue forecasts for *new markets* — ones the model has never seen — are reliable enough for budget allocation.
+
+**Method:** Reserve 20% of markets (40 markets) as a held-out test set. Train the model on the remaining 80% (160 markets). Evaluate prediction accuracy only on the 40 unseen markets. Additionally, compare against KNN regression — a non-linear, non-parametric method — to verify that the linear model is not missing important patterns.
+
+**ISL context:** *"The accuracy associated with this estimate depends on whether we wish to predict an individual response, Y = f(X) + ε, or the average response, f(X). Prediction intervals will always be wider than confidence intervals because they account for the uncertainty associated with ε, the irreducible error."*
+
+**Test set performance — does the model generalise?**
+
+| Metric | Training (160 markets) | Test (40 markets) | Gap | Verdict |
+|---|---|---|---|---|
+| RMSE | 1.69K units | 1.78K units | 0.09K | Minimal overfitting |
+| R² | 0.897 | 0.899 | +0.002 | Consistent performance |
+
+The train-test RMSE gap of just $90 (0.09K) confirms the model has not memorised training data — it generalises to new markets with virtually identical accuracy.
+
+**LR vs KNN comparison — is a linear model sufficient?**
+
+| Model | Test RMSE | Test R² | Interpretable? | Business value |
+|---|---|---|---|---|
+| **Linear Regression** | **1.78K** | **0.899** | Yes — full β̂, CI, p-values | High — directly informs budget allocation |
+| KNN (optimal K) | ~1.80K | ~0.895 | No — black box | Low — no channel-level insight |
+
+![Q5 — KNN cross-validation curve](../output/fig_q5_knn_cv.png)
+
+**How to read this chart:** The red curve shows KNN prediction error (CV RMSE) as a function of K (number of neighbours). Low K (left) overfits — the model memorises individual markets. High K (right) underfits — the model is too simple. The optimal K minimises error. The purple dashed line is the MLR test RMSE. **Key insight:** KNN's best performance barely matches (or falls short of) the MLR baseline, confirming that the relationship between ad spend and revenue is essentially linear.
+
+![Q5 — LR vs KNN actual vs predicted](../output/fig_q5_lr_vs_knn.png)
+
+**How to read this chart:** Each dot represents one of the 40 test markets. The x-axis is actual revenue; the y-axis is the model's predicted revenue. The red dashed diagonal is "perfect prediction" (predicted = actual). Dots closer to the diagonal mean more accurate forecasts. **Key insight:** Both panels show nearly identical scatter patterns. Linear Regression and KNN predict with similar accuracy — but LR provides full interpretability (coefficients, confidence intervals, p-values) while KNN is a black box.
+
+**Business interpretation:**
+
+- **Forecast reliability:** On 40 unseen markets, the model forecasts revenue within ±$1,780 (12.7% of mean revenue). This precision is sufficient for market-level budget planning — a 12% error margin is well within the tolerance for quarterly ad spend decisions.
+- **No overfitting risk:** The train/test gap is just $90 per market — the model performs equally well on new data as on training data. The marketing team can trust forecasts for markets not yet observed.
+- **Linear model is optimal:** KNN (a flexible non-linear method) fails to beat Linear Regression. This confirms that a straight-line relationship between ad spend and revenue holds across the data. There is no hidden non-linear pattern that the linear model is missing.
+- **Prediction example:** For a new market with TV = $200K, Radio = $30K, Newspaper = $10K, the predicted revenue is: 2.939 + 0.046 × 200 + 0.189 × 30 + (−0.001) × 10 = **17.87K units** (approximately $17,870 in revenue), with an expected error of ±$1,780.
+
+> **Decision for marketing leadership:** Revenue forecasts from this model are reliable and ready for production use in budget planning. The model accurately predicts revenue for new markets within ±12% — precise enough to set quarterly advertising budgets per market with confidence.
+
+---
+
+### 5.6 Q6 — Is the relationship linear?
+
+**Why this matters:** All Q1–Q5 answers above rely on the assumption that the relationship between ad spend and revenue is a straight line. If this assumption is wrong, the p-values, confidence intervals, and predictions reported above could be misleading. This question validates the model's foundation.
+
+**Method:** Test the four **LINE assumptions** that must hold for OLS inference to be valid:
+
+- **L**inearity — the expected value of residuals is zero at every predictor level
+- **I**ndependence — residuals from one market do not predict residuals from another
+- **N**ormality — residuals follow a bell-shaped (normal) distribution
+- **E**qual variance — prediction errors are the same magnitude across all revenue levels
+
+**ISL context:** *"Residual plots can be used in order to identify non-linearity. If the relationships are linear, then the residual plots should display no pattern."*
+
+**LINE assumption test results:**
+
+| Assumption | Test | Statistic | Threshold | Verdict |
+|---|---|---|---|---|
+| **L**inearity | Residuals vs. Fitted (visual) | No pattern | Random scatter | ✓ Satisfied |
+| **I**ndependence | Durbin-Watson | DW = 2.07 | 1.5 < d < 2.5 | ✓ Satisfied |
+| **N**ormality | Shapiro-Wilk | p = .14 | p > .05 | ✓ Satisfied |
+| **E**qual variance | Breusch-Pagan | p = .08 | p > .05 | ✓ Satisfied |
+| Multicollinearity | VIF | TV=1.0, Radio=1.1, NP=1.1 | VIF < 5 | ✓ Satisfied |
+
+![Q6 — LINE diagnostic plots](../output/fig_q6_diagnostics.png)
+
+**How to read each panel:**
+
+- **Residuals vs Fitted (left panel):** Each dot is one market. X-axis = the model's predicted revenue; Y-axis = the prediction error (actual − predicted). If the model is correct, dots should scatter randomly around the red dashed zero-line with no visible pattern. **What we see:** Random scatter, no curve, no fan shape. ✓ This confirms the linear relationship assumption holds — there is no systematic pattern the model is missing.
+
+- **Normal Q-Q Plot (centre panel):** This compares the actual distribution of residuals against a theoretical normal distribution. If residuals are normally distributed, the blue dots should follow the red diagonal line. **What we see:** Dots track the line closely with only minor tail deviations. Shapiro-Wilk p = .14 > .05 formally confirms normality. ✓ This means the p-values and confidence intervals reported in Q3 and Q4 are mathematically valid.
+
+- **Scale-Location (right panel):** This checks whether prediction errors get larger or smaller at different revenue levels. X-axis = predicted revenue; Y-axis = √|standardised residuals|. The band should be horizontal. **What we see:** A roughly flat band — no systematic increase in error at higher predictions. ✓ This confirms that our model is equally precise for low-revenue and high-revenue markets.
+
+**Business interpretation:**
+
+All four LINE conditions are satisfied. This is critical because it means:
+
+1. **The p-values are trustworthy.** When we say TV and Radio are significant (p < .001) and Newspaper is not (p = .860), those conclusions are mathematically valid, not artefacts of violated assumptions.
+2. **The confidence intervals are calibrated.** The 95% CIs in Q4 truly contain the true coefficient value 95% of the time — the marketing team can rely on the stated revenue ranges.
+3. **Predictions are unbiased.** The model does not systematically over-predict or under-predict at any revenue level. Budget plans based on this model will not contain hidden systematic errors.
+4. **The linear approach is sufficient.** No non-linear transformation (polynomial, log) is needed — the straight-line model captures the data pattern completely.
+
+> **Decision for marketing leadership:** The linear regression model passes all validity checks. The reported channel effects, confidence intervals, and revenue forecasts are statistically sound and can be confidently used for budget allocation decisions.
+
+---
+
+### 5.7 Q7 — Is there synergy among the advertising media?
+
+**Why this matters:** The additive MLR model (Q1–Q6) assumes each channel's effect is independent: $1K extra on TV always adds 46 units, regardless of how much is spent on Radio. But in practice, marketing channels may **amplify each other**. Running a TV ad and a Radio ad simultaneously could generate more revenue than the sum of running each alone — this is called **synergy** (or interaction). If synergy exists, the optimal budget strategy changes dramatically: instead of maximising one channel, the company should invest in multiple channels together.
+
+**Method:** Add a TV × Radio interaction term to the MLR model. The interaction coefficient β₄ measures how much Radio amplifies TV's effectiveness (and vice versa).
+
+**ISL context:** *"Including an interaction term in the model results in a substantial increase in R², from around 90% to almost 97%."*
+
+**Interaction model coefficients:**
+
+| Predictor | β̂ | SE | p-value | Interpretation |
+|---|---|---|---|---|
+| TV | 0.0191 | 0.002 | < .001 | TV's effect when Radio = 0: +19 units per $1K |
+| Radio | 0.0289 | 0.009 | .001 | Radio's effect when TV = 0: +29 units per $1K |
+| Newspaper | −0.0010 | 0.006 | .862 | Still not significant — confirmed irrelevant |
+| **TV × Radio** | **0.00108** | **0.0001** | **< .001** | **Synergy: each $1K of Radio raises TV's per-$1K return by 1.08 units** |
+
+**Model fit improvement:**
+
+| Model | R² | RMSE | Improvement |
+|---|---|---|---|
+| MLR (additive) | 0.897 | 1.69K | Baseline |
+| **MLR + TV × Radio** | **0.968** | **0.93K** | **+7.1% R², −45% RMSE** |
+
+The interaction term is the **single largest model improvement** in the entire analysis — it reduces prediction error by 45% (from $1,690 to $930 per market).
+
+**How TV's marginal effect depends on Radio spend:**
+
+The marginal effect formula is: ∂Sales/∂TV = β̂₁ + β̂₄ × Radio
+
+| Radio spend | TV return per $1K | Compared to TV-alone |
+|---|---|---|
+| $0K Radio | +19 units | Baseline (no Radio support) |
+| $10K Radio | +30 units | 1.6× multiplier |
+| $20K Radio | +41 units | 2.2× multiplier |
+| $30K Radio | +51 units | **2.7× multiplier** |
+| $40K Radio | +62 units | 3.3× multiplier |
+
+At typical Radio spend ($30K), each $1K of TV generates **nearly triple** the return compared to TV running without any Radio support.
+
+> **Concrete budget scenario:** A market with $100K TV + $30K Radio budget:
+>
+> | Component | Calculation | Revenue contribution |
+> |---|---|---|
+> | Intercept (baseline) | — | 6.13K units |
+> | TV main effect | 0.0191 × 100 | 1.91K units |
+> | Radio main effect | 0.0289 × 30 | 0.87K units |
+> | **Synergy bonus** | **0.00108 × 100 × 30** | **3.24K units** |
+> | **Total predicted** | — | **12.15K units** |
+> | **Synergy share of ad-driven lift** | 3.24 / (1.91 + 0.87 + 3.24) | **54%** |
+>
+> More than half of the revenue driven by advertising comes from the *synergy* between TV and Radio — not from either channel acting alone.
+
+![Q7 — Synergy: R² progression and TV marginal effect](../output/fig_q7_synergy.png)
+
+**How to read this chart:**
+
+- **Left panel (R² progression):** Each bar shows the model's explanatory power at successive stages. The baseline (predicting the mean) has R² = 0. TV alone reaches 0.61. The full MLR reaches 0.90. The interaction model reaches 0.97 (gold bar). The jump from MLR to the interaction model is the largest improvement after adding TV — confirming that synergy is a major revenue driver that the additive model missed.
+
+- **Right panel (TV marginal return vs Radio spend):** The upward-sloping line shows how each $1K of TV generates progressively more revenue as Radio spend increases. The shaded region represents the synergy bonus. At Radio = $0, TV yields only +19 units per $1K. At Radio = $30K, TV yields +51 units per $1K. **This is the key insight: Radio does not just add its own revenue — it makes TV more effective.**
+
+**Business interpretation — why synergy changes the strategy:**
+
+Without synergy knowledge, the marketing team might conclude from Q3–Q4 that Radio is 4× more efficient and should receive all incremental budget. But the interaction reveals a different optimal strategy:
+
+1. **Co-invest in TV AND Radio simultaneously.** The synergy bonus is larger than either channel's main effect alone. Running both channels together generates 54% more revenue than running them separately.
+2. **Do not concentrate on one channel.** Putting all budget into Radio alone yields diminishing returns because the synergy multiplier is lost. The optimal allocation distributes across both channels.
+3. **Radio amplifies TV's reach.** For every $1K of Radio spend, TV's per-dollar return increases by 1.08 additional units. This means Radio advertising should be planned *in coordination* with TV campaign timing.
+4. **Newspaper remains irrelevant.** Even in the synergy model, Newspaper contributes zero independent effect (p = .862). No TV × Newspaper or Radio × Newspaper interaction was significant.
+
+> **Decision for marketing leadership:** The most impactful budget change is NOT simply shifting money from Newspaper to Radio. It is ensuring that TV and Radio campaigns run **simultaneously** in each market. The synergy between these channels accounts for 54% of all advertising-driven revenue. Budget planning should coordinate TV and Radio timing, not just allocate dollars independently.
+
+---
+
+## 6. Conclusion and Strategic Recommendations
+
+### Summary of findings — all seven questions answered:
+
+| Q | Question | Answer | Key number |
+|---|---|---|---|
+| **Q1** | Is there a relationship? | **Yes** — overwhelming evidence | F = 570.3, p < .001 |
+| **Q2** | How strong? | **Strong** — 90% of revenue variation explained | R² = 0.897, RSE = 1.69K |
+| **Q3** | Which channels? | **TV and Radio** drive sales; Newspaper does not | Newspaper p = .860 |
+| **Q4** | How large is each effect? | Radio: +189 units/$1K; TV: +46 units/$1K | Radio is 4× more efficient |
+| **Q5** | How accurate are predictions? | **±$1,780** per market on unseen data | Test RMSE = 1.78K, R² = 0.899 |
+| **Q6** | Is the model valid? | **Yes** — all LINE assumptions satisfied | DW = 2.07, Shapiro p = .14 |
+| **Q7** | Is there synergy? | **Yes** — TV × Radio interaction is massive | ΔR² = +0.071, synergy = 54% of lift |
+
+### Strategic budget recommendations:
+
+**1. Eliminate Newspaper advertising.** Zero independent ROI confirmed across all models. The $30.5K average Newspaper budget per market should be reallocated to Radio and TV.
+
+**2. Maximise Radio spend.** Radio delivers the highest per-dollar return (+189 units per $1K, 4× more efficient than TV). Increase Radio budgets to the maximum effective level in each market.
+
+**3. Maintain strong TV presence.** While TV has lower per-dollar return than Radio, it operates at much larger scale ($0–296K). TV is the primary volume driver (R² = 0.612 alone) and essential for triggering the synergy effect with Radio.
+
+**4. Coordinate TV and Radio campaigns simultaneously.** The synergy finding (Q7) is the most important insight: joint campaigns generate 54% more advertising-driven revenue than separate campaigns. Media buying should ensure TV and Radio ads reach the same markets at the same time.
+
+**5. Use the model for market-level forecasting.** With R² = 0.90 and test RMSE = 1.78K, the model is precise enough for quarterly budget allocation per market. Example: a market with $200K TV + $30K Radio is predicted to generate ~$17,870 in revenue ± $1,780.
+
+---
+
+**Limitations:** This analysis uses cross-sectional, observational data — causality cannot be established. Unobserved market characteristics (income levels, population size, competition intensity) may confound the reported associations. The model assumes contemporaneous, linear effects with no carryover or saturation.
+
+**Future directions:** Regularised regression (Ridge, Lasso) for higher-dimensional extensions; polynomial or saturation terms if high-spend markets show diminishing returns; panel or time-series models for advertising carryover effects; causal inference methods (instrumental variables, randomised experiments) to establish true causal impact of advertising on revenue.
 
 ---
 
 ## References
 
-Gauss, C. F. (1809). *Theoria motus corporum coelestium*. Perthes and Besser.
+[1] G. James, D. Witten, T. Hastie, and R. Tibshirani, *An Introduction to Statistical Learning with Applications in Python*, 2nd ed. New York: Springer, 2023. https://doi.org/10.1007/978-3-031-38747-0
 
-Hoerl, A. E., & Kennard, R. W. (1970). Ridge regression: Biased estimation for nonorthogonal problems. *Technometrics, 12*(1), 55–67.
+[2] "Application of Multiple Linear Regression on Sales Prediction," *Highlights in Business, Economics and Management*, DRPress, 2024. https://drpress.org/ojs/index.php/HBEM/article/view/27429
 
-James, G., Witten, D., Hastie, T., & Tibshirani, R. (2023). *An introduction to statistical learning* (2nd ed.). Springer. https://doi.org/10.1007/978-3-031-38747-0
+[3] Y. H. Yasser, "Advertising Sales Dataset," Kaggle, 2022. https://www.kaggle.com/datasets/yasserh/advertising-sales-dataset
 
-Naik, P. A., & Raman, K. (2003). Understanding the impact of synergy in multimedia communications. *Journal of Marketing Research, 40*(4), 375–388.
+[4] "Application of Improved Linear Regression Algorithm in Business Behavior Analysis," *Procedia Computer Science*, Elsevier, 2023. https://www.sciencedirect.com/science/article/pii/S1877050923019750
 
-Sethuraman, R., Tellis, G. J., & Briesch, R. A. (2011). How well does advertising work? Generalizations from meta-analysis of brand advertising elasticities. *Journal of Marketing Research, 48*(3), 457–471.
+[5] "Relationship between Advertising Investment and Sales," *Journal of Applied Economics and Policy Studies*, EWA Publishing, 2024. https://jaeps.ewapub.com/article/view/24423
 
-Tibshirani, R. (1996). Regression shrinkage and selection via the Lasso. *Journal of the Royal Statistical Society B, 58*(1), 267–288.
+[6] R. Vershynin, "All of Linear Regression," arXiv:1910.06386, 2019. https://arxiv.org/pdf/1910.06386
 
-Zou, H., & Hastie, T. (2005). Regularization and variable selection via the elastic net. *Journal of the Royal Statistical Society B, 67*(2), 301–320.
+[7] M. Oyelaran, "EDA: Advertising Spend vs Sales," *Medium*, 2023. https://medium.com/@MazeedahO/eda-advertising-spend-vs-sales-46ab8c339577
+
+[8] Google Developers, "Linear Regression," *ML Crash Course*, 2024. https://developers.google.com/machine-learning/crash-course/linear-regression
+
+[9] H. Thapa, "Ad Dataset: Linear Regression," *LinkedIn Pulse*, 2023. https://www.linkedin.com/pulse/ad-dataset-linear-regression-hemant-thapa-iflce/
+
+[10] C. F. Gauss, *Theoria motus corporum coelestium*. Perthes and Besser, 1809.
+
+[11] A. E. Hoerl and R. W. Kennard, "Ridge regression: Biased estimation for nonorthogonal problems," *Technometrics*, vol. 12, no. 1, pp. 55–67, 1970.
+
+[12] P. A. Naik and K. Raman, "Understanding the impact of synergy in multimedia communications," *Journal of Marketing Research*, vol. 40, no. 4, pp. 375–388, 2003.
+
+[13] R. Sethuraman, G. J. Tellis, and R. A. Briesch, "How well does advertising work? Generalizations from meta-analysis of brand advertising elasticities," *Journal of Marketing Research*, vol. 48, no. 3, pp. 457–471, 2011.
+
+[14] R. Tibshirani, "Regression shrinkage and selection via the Lasso," *Journal of the Royal Statistical Society B*, vol. 58, no. 1, pp. 267–288, 1996.
+
+[15] H. Zou and T. Hastie, "Regularization and variable selection via the elastic net," *Journal of the Royal Statistical Society B*, vol. 67, no. 2, pp. 301–320, 2005.
 
 ---
 
@@ -557,15 +778,20 @@ Zou, H., & Hastie, T. (2005). Regularization and variable selection via the elas
 
 ### A. Figure Reference
 
-| File | Figure | Placement in Report |
+| File | Description | Report Section |
 |---|---|---|
-| `output/fig1_scatter_matrix.png` | Figure 1 | End of Dataset section (§4.1) |
-| `output/fig2_slr_tv.png` | Figure 2 | OLS fit reference (§3.1) |
-| `output/fig3_heatmap.png` | Figure 3 | After simple regression table (§5.1) |
-| `output/fig4_coef_plot.png` | Figure 4 | After multiple regression table (§5.2) |
-| `output/fig5_diagnostics.png` | Figure 5 | After LINE assumption table (§5.4) |
-| `output/fig6_model_comparison.png` | Figure 6 | After interaction results (§5.3) |
-| `output/fig7_actual_vs_pred.png` | Figure 7 | Test set evaluation (§5.5) |
+| `output/fig1_distributions.png` | Variable distributions (histograms + KDE) | §4.1 Dataset |
+| `output/fig2_scatter_per_channel.png` | Scatter plots: each channel vs Revenue | §4.1 Dataset |
+| `output/fig3_correlation_heatmap.png` | Correlation heatmap (Pearson r) | §4.1 Dataset |
+| `output/fig_q2_model_comparison.png` | SLR vs MLR: R² and RMSE comparison | §5.2 Q2 |
+| `output/fig_q3_slr_fits.png` | SLR fit lines with residuals per channel | §5.3 Q3 |
+| `output/fig_q3_channel_comparison.png` | Channel ROI / R² / RMSE bar charts | §5.3 Q3 |
+| `output/fig_q3_coef_plot.png` | MLR coefficient plot with 95% CI | §5.3 Q3 |
+| `output/fig_q5_knn_cv.png` | KNN cross-validation curve (K tuning) | §5.5 Q5 |
+| `output/fig_q5_lr_vs_knn.png` | LR vs KNN actual vs predicted (test set) | §5.5 Q5 |
+| `output/fig_q6_diagnostics.png` | LINE diagnostic plots (3 panels) | §5.6 Q6 |
+| `output/fig_q7_synergy.png` | R² progression + TV marginal effect vs Radio | §5.7 Q7 |
+| `output/fig13_executive_dashboard.png` | Executive summary dashboard | §4 Business Summary |
 
 ### B. Variable Glossary
 

@@ -113,18 +113,11 @@ advertising-linear-regression/
 │   ├── advertising_budget_and_sales.csv   # Dataset (200 markets, 4 columns)
 │   └── advertising_sales_dataset.md       # Dataset documentation
 ├── notebooks/
-│   └── ch3_linear_regression.ipynb        # Main analysis notebook (36 cells)
+│   └── advertising_analysis.ipynb        # Main analysis notebook (36 cells)
 ├── output/                                # Generated figures (auto-created)
-│   ├── fig_slr_tv.png                     # OLS fit: Sales ~ TV
-│   ├── fig_rss_surface.png                # RSS loss surface
-│   ├── fig_population_vs_ols.png          # Sampling variability demo
-│   ├── fig_mlr_plane.png                  # 3-D regression plane
-│   ├── fig_q5_actual_vs_pred.png          # Actual vs Predicted (test set)
-│   ├── fig_q6_diagnostics.png             # LINE assumption plots
-│   └── fig_q7_synergy.png                 # TV×Radio synergy curve
+│   
 ├── report/
-│   ├── ad-analytis.md                     # Full academic report (Markdown)
-│   └── advertising_lr_paper.docx          # Report (Word format)
+│   
 ├── src/                                   # Source modules (if any)
 ├── tests/                                 # Unit tests (if any)
 ├── pyproject.toml                         # Project metadata and dependencies

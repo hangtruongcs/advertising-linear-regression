@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Slides — Phân Tích Hồi Quy Tuyến Tính</title>
+<style>
+  @page { size: 254mm 190.5mm; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Helvetica Neue", Arial, sans-serif; color: #1a1a2e; }
+
+  .slide {
+    width: 254mm; height: 190.5mm;
+    padding: 18mm 22mm 16mm 22mm;
+    page-break-after: always;
+    position: relative; overflow: hidden;
+  }
+  .slide:last-child { page-break-after: auto; }
+  .slide::after {
+    content: attr(data-page);
+    position: absolute; bottom: 8mm; right: 14mm;
+    font-size: 9pt; color: #888;
+  }
+  .slide::before {
+    content: ""; position: absolute; top: 0; left: 0;
+    width: 100%; height: 4px;
+    background: linear-gradient(90deg, #0f3460, #e94560);
+  }
+
+  .title-slide {
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center;
+    background: linear-gradient(135deg, #0f3460 0%, #16213e 100%); color: #fff;
+  }
+  .title-slide::before { display: none; }
+  .title-slide h1 { font-size: 22pt; line-height: 1.3; margin-bottom: 12px; }
+  .title-slide .subtitle { font-size: 13pt; color: #a0c4ff; margin-bottom: 24px; }
+  .title-slide .meta { font-size: 10.5pt; color: #ccc; line-height: 1.8; }
+  .title-slide .meta strong { color: #fff; }
+
+  .divider {
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start; padding-left: 36mm;
+    background: #16213e; color: #fff;
+  }
+  .divider::before { background: #e94560; height: 5px; }
+  .divider h2 { font-size: 26pt; font-weight: 700; margin-bottom: 10px; }
+  .divider .divider-sub { font-size: 13pt; color: #a0c4ff; max-width: 75%; }
+
+  h2.st { font-size: 15pt; font-weight: 700; color: #0f3460; border-bottom: 2px solid #e94560; padding-bottom: 4px; margin-bottom: 10px; }
+  h3 { font-size: 11pt; font-weight: 700; color: #16213e; margin: 6px 0 3px 0; }
+  p, li { font-size: 10pt; line-height: 1.5; }
+  ul, ol { margin-left: 16px; }
+  li { margin-bottom: 2px; }
+  strong { color: #0f3460; }
+
+  table { border-collapse: collapse; width: 100%; margin: 5px 0; font-size: 9pt; }
+  th { background: #0f3460; color: #fff; padding: 4px 7px; text-align: left; font-weight: 600; }
+  td { border: 1px solid #ddd; padding: 3px 7px; }
+  tr:nth-child(even) td { background: #f5f7fa; }
+
+  .fig { text-align: center; margin: 5px 0; }
+  .fig img { max-height: 100mm; max-width: 100%; }
+  .figc { font-size: 8.5pt; color: #555; margin-top: 2px; text-align: center; }
+
+  .box { background: #eef4fb; border-left: 4px solid #0f3460; padding: 6px 12px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+  .boxr { background: #fef2f2; border-left: 4px solid #e94560; padding: 6px 12px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+  .boxg { background: #f0fdf4; border-left: 4px solid #27ae60; padding: 6px 12px; margin: 6px 0; border-radius: 0 4px 4px 0; }
+
+  .cols { display: flex; gap: 14px; }
+  .col { flex: 1; }
+  .formula { background: #f8f9fa; border: 1px solid #ddd; border-left: 4px solid #0f3460; padding: 6px 12px; font-family: "Courier New", monospace; font-size: 9.5pt; margin: 5px 0; line-height: 1.45; }
+  .sm { font-size: 8.5pt; }
+  .tag { display: inline-block; background: #0f3460; color: #fff; font-size: 7.5pt; padding: 1px 7px; border-radius: 10px; }
+  .tagr { background: #e94560; }
+  .tagg { background: #27ae60; }
+</style>
+</head>
+<body>
+
+<!-- ======== SLIDE 1: TITLE ======== -->
+<div class="slide title-slide" data-page="">
+  <h1>Phân Tích Hồi Quy Tuyến Tính<br>Ngân Sách Quảng Cáo và Dự Báo Doanh Thu</h1>
+  <div class="subtitle">Multiple Linear Regression &bull; OLS &bull; ISL Marketing Plan</div>
+  <div class="meta">
+    <strong>Tác giả:</strong> Trương Thị Ngọc Hằng<br>
+    <strong>Giảng viên:</strong> Hồ Đắc Quán<br>
+    <strong>Môn học:</strong> Computational Statistics &mdash; 29 March 2026<br>
+    <strong>Dataset:</strong> Advertising Budget and Sales — 200 thị trường (James et al., 2023)
+  </div>
+</div>
+
+<!-- ======== SLIDE 2: ABSTRACT ======== -->
+<div class="slide" data-page="2">
+  <h2 class="st">Tóm Tắt (Abstract)</h2>
+  <p>Nghiên cứu sử dụng <strong>Multiple Linear Regression (OLS)</strong> để giải quyết vấn đề cốt lõi trong <strong>Marketing Analytics</strong>: kênh quảng cáo nào thúc đẩy doanh số, và ngân sách phân bổ như thế nào để tối đa hoá <strong>Advertising ROI</strong>?</p>
+  <p>Theo khung <strong>ISL Marketing Plan</strong> (James et al., 2023, Ch. 3), phân tích bộ dữ liệu Advertising (n = 200) qua <strong>7 câu hỏi nghiên cứu</strong>.</p>
+  <div class="box" style="margin-top: 8px;">
+    <h3>Kết quả chính</h3>
+    <ul>
+      <li><strong>TV</strong> (β̂ = 0.046, p &lt; .001) và <strong>Radio</strong> (β̂ = 0.189, p &lt; .001) là yếu tố dự báo có ý nghĩa</li>
+      <li><strong>Newspaper</strong> không có tác động độc lập (p = .860)</li>
+      <li>Mô hình OLS: R² = 0.897, Test RMSE = 1.782K</li>
+      <li>Tương tác TV × Radio xác nhận <strong>Synergy</strong>: phần thưởng 24.2%, R² = 0.968</li>
+    </ul>
+  </div>
+  <div class="boxg" style="margin-top: 8px;">
+    <p><strong>Chiến lược đề xuất:</strong> Loại bỏ Newspaper, tối đa hoá Radio, đồng lịch TV &amp; Radio → dự kiến tăng doanh số <strong>+25%</strong> mỗi thị trường với tổng chi tiêu không đổi.</p>
+  </div>
+  <p style="margin-top: 8px;"><strong>Keywords:</strong> Multiple Linear Regression, OLS, Advertising ROI, Sales Prediction, Synergy, Marketing Analytics, ISL</p>
+</div>
+
+<!-- ======== SLIDE 3: §1 DIVIDER ======== -->
+<div class="slide divider" data-page="3">
+  <h2>§1. Giới Thiệu</h2>
+  <div class="divider-sub">Vấn đề kinh doanh, phương pháp phân tích, và bảy câu hỏi nghiên cứu ISL</div>
+</div>
+
+<!-- ======== SLIDE 4: §1.1 BUSINESS PROBLEM ======== -->
+<div class="slide" data-page="4">
+  <h2 class="st">§1.1 Vấn Đề Kinh Doanh</h2>
+  <p>Công ty bán sản phẩm trên <strong>200 thị trường độc lập</strong>, phân bổ ngân sách quảng cáo qua 3 kênh: <strong>TV</strong>, <strong>Radio</strong>, <strong>Newspaper</strong>. Trung bình chi $200.9K/thị trường nhưng thiếu bằng chứng khoa học.</p>
+  <div class="cols" style="margin-top: 8px;">
+    <div class="col">
+      <div class="box">
+        <h3>3 Câu hỏi cốt lõi</h3>
+        <ol>
+          <li>Quảng cáo có thực sự thúc đẩy doanh số, hay ngân sách đang bị lãng phí?</li>
+          <li>Kênh nào tạo ra lợi nhuận đo lường được — và kênh nào thì không?</li>
+          <li>Ngân sách nên được phân bổ lại như thế nào để tối đa hoá doanh thu trên mỗi đồng?</li>
+        </ol>
+      </div>
+    </div>
+    <div class="col">
+      <div class="boxr">
+        <h3>Rủi ro nếu không phân tích</h3>
+        <p>Tiếp tục đầu tư vào các kênh kém hiệu quả trong khi thiếu đầu tư vào các kênh có ROI cao.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 5: §1.2 ANALYTICAL APPROACH ======== -->
+<div class="slide" data-page="5">
+  <h2 class="st">§1.2 Phương Pháp Phân Tích</h2>
+  <p>Bài toán <strong>hồi quy có giám sát</strong>: doanh số (nghìn đơn vị) là biến phản hồi Y, ba ngân sách quảng cáo (nghìn đô la) là các biến dự báo X₁, X₂, X₃.</p>
+  <div class="formula">Y = f(X₁, X₂, X₃) + ε &nbsp;&nbsp;&nbsp;&nbsp; (1.1)</div>
+  <p>trong đó ε là nhiễu không thể rút gọn từ các yếu tố thị trường ngoài quảng cáo.</p>
+  <p style="margin-top: 6px;">Áp dụng OLS theo <strong>ISL Marketing Plan</strong> — bảy câu hỏi nghiên cứu (James et al., 2023, Ch. 3) xây dựng từ sự tồn tại của mô hình → phân bổ kênh → dự báo → kiểm định → synergy.</p>
+  <table style="margin-top: 8px;">
+    <tr><th>Biến</th><th>Vai trò</th><th>Mean</th><th>SD</th><th>Min</th><th>Max</th></tr>
+    <tr><td>TV</td><td>Predictor X₁</td><td>$147.0K</td><td>$85.9K</td><td>$0.7K</td><td>$296.4K</td></tr>
+    <tr><td>Radio</td><td>Predictor X₂</td><td>$23.3K</td><td>$14.9K</td><td>$0.0K</td><td>$49.6K</td></tr>
+    <tr><td>Newspaper</td><td>Predictor X₃</td><td>$30.6K</td><td>$21.8K</td><td>$0.3K</td><td>$114.0K</td></tr>
+    <tr><td><strong>Sales</strong></td><td><strong>Response Y</strong></td><td><strong>14.02K</strong></td><td><strong>5.22K</strong></td><td><strong>1.6K</strong></td><td><strong>27.0K</strong></td></tr>
+  </table>
+</div>
+
+<!-- ======== SLIDE 6: §1.3 SEVEN QUESTIONS ======== -->
+<div class="slide" data-page="6">
+  <h2 class="st">§1.3 Bảy Câu Hỏi Nghiên Cứu — Kế Hoạch Marketing ISL</h2>
+  <table style="font-size: 10pt; margin-top: 6px;">
+    <tr><th>#</th><th>Câu hỏi kinh doanh</th><th>Phương pháp thống kê</th><th>Phần</th></tr>
+    <tr><td>Q1</td><td>Có mối quan hệ giữa quảng cáo và doanh số không?</td><td>F-test</td><td>§5.1</td></tr>
+    <tr><td>Q2</td><td>Mối quan hệ đó mạnh đến mức nào?</td><td>R², RSE</td><td>§5.2</td></tr>
+    <tr><td>Q3</td><td>Kênh truyền thông nào đóng góp độc lập vào doanh số?</td><td>t-tests, MLR</td><td>§5.3</td></tr>
+    <tr><td>Q4</td><td>Tác động của mỗi kênh lớn bao nhiêu và chính xác đến đâu?</td><td>β̂, 95% CI</td><td>§5.4</td></tr>
+    <tr><td>Q5</td><td>Chúng ta có thể dự báo doanh số tại thị trường mới chính xác không?</td><td>Test RMSE, KNN</td><td>§5.5</td></tr>
+    <tr><td>Q6</td><td>Mô hình tuyến tính có phù hợp với dữ liệu này không?</td><td>LINE diagnostics</td><td>§5.6</td></tr>
+    <tr><td>Q7</td><td>Các kênh truyền thông có khuếch đại lẫn nhau (Synergy) không?</td><td>Interaction term</td><td>§5.7</td></tr>
+  </table>
+  <div class="box" style="margin-top: 10px;">
+    <p><em>"Suppose that in our role as statistical consultants we are asked to suggest, on the basis of this data, a marketing plan for next year that will result in high product sales. What information would be useful in order to provide such a recommendation?"</em></p>
+    <p style="text-align: right; font-size: 9pt;">— James et al., <em>An Introduction to Statistical Learning</em>, Ch. 3.4</p>
+  </div>
+</div>
+
+<!-- ======== SLIDE 7: §2 DIVIDER ======== -->
+<div class="slide divider" data-page="7">
+  <h2>§2. Tổng Quan Tài Liệu</h2>
+  <div class="divider-sub">ISL Chapter 3 — Tài liệu tham khảo chính và đóng góp của nghiên cứu</div>
+</div>
+
+<!-- ======== SLIDE 8: §2.1 & §2.2 LITERATURE ======== -->
+<div class="slide" data-page="8">
+  <h2 class="st">§2.1 Tài Liệu Tham Khảo Chính &amp; §2.2 Đóng Góp</h2>
+  <div class="cols">
+    <div class="col">
+      <h3>§2.1 Primary Reference: ISL Ch. 3</h3>
+      <p>Nghiên cứu tuân theo <strong>Chapter 3</strong> của <em>An Introduction to Statistical Learning</em> (ISL) — James, Witten, Hastie, Tibshirani (Springer, 2023).</p>
+      <ul style="margin-top: 6px;">
+        <li>Sử dụng cùng bộ dữ liệu Advertising 200 thị trường</li>
+        <li>Giới thiệu SLR, MLR, OLS, kiểm định giả thuyết, chẩn đoán mô hình</li>
+        <li>7 câu hỏi marketing plan (ISL §3.4) cấu trúc báo cáo</li>
+      </ul>
+      <div class="box" style="margin-top: 8px;">
+        <p class="sm"><strong>Phương pháp từ ISL Ch. 3:</strong><br>
+        OLS: β̂ = (XᵀX)⁻¹Xᵀy (§3.1)<br>
+        F-test, t-tests (§3.2)<br>
+        TV × Radio interaction (§3.3.2)<br>
+        LINE diagnostics (§3.3.3)</p>
+      </div>
+    </div>
+    <div class="col">
+      <h3>§2.2 Đóng góp của nghiên cứu</h3>
+      <p>ISL trình bày dữ liệu này như <em>ví dụ giảng dạy</em>. Báo cáo này áp dụng vào bối cảnh <strong>quyết định kinh doanh thực tế</strong>, bổ sung 3 yếu tố:</p>
+      <div class="boxg" style="margin-top: 8px;">
+        <ol>
+          <li><strong>Đánh giá test-set ngoài mẫu</strong> — 80/20 train/test split, Test RMSE, KNN benchmark</li>
+          <li style="margin-top: 4px;"><strong>Kiểm định thống kê chính thức cho LINE</strong> — Durbin-Watson, Shapiro-Wilk, Breusch-Pagan, VIF</li>
+          <li style="margin-top: 4px;"><strong>Khuyến nghị phân bổ lại ngân sách</strong> — cụ thể, có ước tính tác động doanh thu</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 9: §3 DIVIDER ======== -->
+<div class="slide divider" data-page="9">
+  <h2>§3. Phương Pháp Thống Kê</h2>
+  <div class="divider-sub">SLR, MLR, Interaction Term (Synergy), LINE Assumptions</div>
+</div>
+
+<!-- ======== SLIDE 10: §3.1 SLR ======== -->
+<div class="slide" data-page="10">
+  <h2 class="st">§3.1 Simple Linear Regression (SLR)</h2>
+  <p>Phân tích từng kênh một cách độc lập:</p>
+  <div class="formula">Sales = β₀ + β₁ × Channel + ε &nbsp;&nbsp;&nbsp;&nbsp; (3.1)</div>
+  <div class="cols" style="margin-top: 6px;">
+    <div class="col">
+      <table>
+        <tr><th>Ký hiệu</th><th>Định nghĩa</th><th>Ý nghĩa</th></tr>
+        <tr><td>Sales</td><td>Biến phản hồi (nghìn đơn vị)</td><td>Mean = 14.02K</td></tr>
+        <tr><td>Channel</td><td>Biến dự báo (nghìn đô la)</td><td>TV, Radio, hoặc NP</td></tr>
+        <tr><td>β₀</td><td>Hệ số chặn (Intercept)</td><td>Doanh thu nền</td></tr>
+        <tr><td>β₁</td><td>Độ dốc (Slope)</td><td>ROI trên mỗi $1K</td></tr>
+        <tr><td>ε</td><td>Sai số không thể rút gọn</td><td>Yếu tố thị trường</td></tr>
+      </table>
+    </div>
+    <div class="col">
+      <h3>OLS tối thiểu hoá RSS:</h3>
+      <div class="formula" style="font-size: 9pt;">
+        RSS = Σᵢ(yᵢ − β̂₀ − β̂₁xᵢ)² &nbsp;&nbsp; (3.2)<br><br>
+        β̂₁ = Σ(xᵢ−x̄)(yᵢ−ȳ) / Σ(xᵢ−x̄)² &nbsp;&nbsp; (3.3)<br>
+        β̂₀ = ȳ − β̂₁x̄ &nbsp;&nbsp; (3.4)
+      </div>
+      <h3>Kiểm định &amp; Đo lường:</h3>
+      <div class="formula" style="font-size: 9pt;">
+        t = β̂₁ / SE(β̂₁) → H₀: β₁ = 0 &nbsp;&nbsp; (3.6)<br>
+        95% CI: β̂₁ ± 1.96 × SE(β̂₁) &nbsp;&nbsp; (3.7)<br>
+        R² = 1 − RSS/TSS &nbsp;&nbsp; (3.8)<br>
+        RSE = √(RSS/(n−p−1)) &nbsp;&nbsp; (3.9)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 11: §3.2 MLR ======== -->
+<div class="slide" data-page="11">
+  <h2 class="st">§3.2 Multiple Linear Regression (MLR)</h2>
+  <p>Mô hình hoá cả ba kênh đồng thời — mỗi β̂ⱼ là đóng góp <strong>duy nhất</strong>, loại trừ tương quan:</p>
+  <div class="formula">Sales = β₀ + β₁(TV) + β₂(Radio) + β₃(Newspaper) + ε &nbsp;&nbsp;&nbsp;&nbsp; (3.10)</div>
+  <div class="cols" style="margin-top: 6px;">
+    <div class="col">
+      <table>
+        <tr><th>Ký hiệu</th><th>Định nghĩa</th></tr>
+        <tr><td>β₁</td><td>Tác động <em>riêng phần</em> TV: ΔSales/$1K giữ nguyên Radio &amp; NP</td></tr>
+        <tr><td>β₂</td><td>Tác động <em>riêng phần</em> Radio: ΔSales/$1K giữ nguyên TV &amp; NP</td></tr>
+        <tr><td>β₃</td><td>Tác động <em>riêng phần</em> NP: ΔSales/$1K giữ nguyên TV &amp; Radio</td></tr>
+      </table>
+      <div class="box" style="margin-top: 6px;">
+        <p class="sm"><strong>Quan trọng:</strong> SLR không phân biệt tương quan vs nhân quả. MLR kiểm soát yếu tố gây nhiễu!</p>
+      </div>
+    </div>
+    <div class="col">
+      <h3>OLS dạng ma trận:</h3>
+      <div class="formula" style="font-size: 9.5pt;">β̂ = (XᵀX)⁻¹Xᵀy &nbsp;&nbsp; (3.11)</div>
+      <h3>F-statistic — kiểm định tổng thể:</h3>
+      <div class="formula" style="font-size: 9.5pt;">
+        H₀: β₁ = β₂ = β₃ = 0<br>
+        F = [(TSS−RSS)/p] / [RSS/(n−p−1)] &nbsp;&nbsp; (3.12)
+      </div>
+      <h3>Adjusted R²:</h3>
+      <div class="formula" style="font-size: 9.5pt;">adj-R² = 1 − (1−R²)(n−1)/(n−p−1) &nbsp;&nbsp; (3.13)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 12: §3.3 INTERACTION ======== -->
+<div class="slide" data-page="12">
+  <h2 class="st">§3.3 Interaction Term — Synergy</h2>
+  <div class="formula">Sales = β₀ + β₁(TV) + β₂(Radio) + β₃(NP) + β₄(TV × Radio) + ε &nbsp;&nbsp;&nbsp;&nbsp; (3.14)</div>
+  <div class="cols" style="margin-top: 8px;">
+    <div class="col">
+      <table>
+        <tr><th>Ký hiệu</th><th>Định nghĩa</th></tr>
+        <tr><td>TV × Radio</td><td>Tích ngân sách TV và Radio cùng thị trường</td></tr>
+        <tr><td>β₄</td><td>Synergy: độ dốc TV thay đổi bao nhiêu trên mỗi $1K Radio</td></tr>
+        <tr><td>β₄ &gt; 0</td><td>Kênh <strong>bổ sung</strong> — kết hợp &gt; tổng riêng lẻ</td></tr>
+        <tr><td>∂Sales/∂TV</td><td>= β̂₁ + β̂₄ × Radio — tăng theo Radio</td></tr>
+      </table>
+      <div class="box" style="margin-top: 8px;">
+        <p><strong>Nguyên tắc phân cấp:</strong> Hiệu ứng chính TV và Radio vẫn trong mô hình ngay cả khi thêm tương tác, bất kể p-value.</p>
+      </div>
+    </div>
+    <div class="col">
+      <h3>§3.4 Giả Định LINE</h3>
+      <table>
+        <tr><th>Giả định</th><th>Điều kiện</th><th>Chẩn đoán</th></tr>
+        <tr><td><strong>L</strong>inearity</td><td>E[εᵢ] = 0</td><td>Residuals vs Fitted</td></tr>
+        <tr><td><strong>I</strong>ndependence</td><td>Cov(εᵢ,εⱼ)=0</td><td>Durbin-Watson ≈ 2</td></tr>
+        <tr><td><strong>N</strong>ormality</td><td>εᵢ ~ N(0,σ²)</td><td>Q-Q + Shapiro-Wilk</td></tr>
+        <tr><td><strong>E</strong>qual var.</td><td>Var(εᵢ) = σ²</td><td>Scale-Loc + B-P test</td></tr>
+      </table>
+      <div class="formula" style="margin-top: 6px; font-size: 9.5pt;">
+        <strong>VIF:</strong> VIF_j = 1/(1 − R²_j) &nbsp;&nbsp; (3.15)<br>
+        VIF &gt; 10 nguy hiểm; VIF &gt; 5 cần thận trọng
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 13: §4 DIVIDER ======== -->
+<div class="slide divider" data-page="13">
+  <h2>§4. Dữ Liệu và Triển Khai</h2>
+  <div class="divider-sub">Thống kê mô tả, EDA, tiền xử lý, khớp mô hình</div>
+</div>
+
+<!-- ======== SLIDE 14: §4.1 DESCRIPTIVE + FIG 1 ======== -->
+<div class="slide" data-page="14">
+  <h2 class="st">§4.1 Bộ Dữ Liệu — Thống Kê Mô Tả</h2>
+  <p>Advertising dataset: n = 200 thị trường, không có giá trị bị thiếu, dữ liệu chéo.</p>
+  <table style="margin-top: 4px;">
+    <tr><th>Biến</th><th>Mean</th><th>SD</th><th>Min</th><th>Median</th><th>Max</th><th>Vai trò</th></tr>
+    <tr><td>TV</td><td>$147.04K</td><td>$85.85K</td><td>$0.7K</td><td>$149.8K</td><td>$296.4K</td><td>Predictor</td></tr>
+    <tr><td>Radio</td><td>$23.26K</td><td>$14.85K</td><td>$0.0K</td><td>$22.9K</td><td>$49.6K</td><td>Predictor</td></tr>
+    <tr><td>Newspaper</td><td>$30.55K</td><td>$21.78K</td><td>$0.3K</td><td>$25.8K</td><td>$114.0K</td><td>Predictor</td></tr>
+    <tr><td><strong>Sales</strong></td><td><strong>14.02K</strong></td><td><strong>5.22K</strong></td><td><strong>1.6K</strong></td><td><strong>12.9K</strong></td><td><strong>27.0K</strong></td><td><strong>Response</strong></td></tr>
+  </table>
+  <div class="fig">
+    <img src="../output/fig1_distributions.png" style="max-height: 80mm;">
+    <div class="figc">Figure 1 — Phân phối biến (Histograms + KDE). TV lệch phải; Sales gần chuẩn quanh 14K.</div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 15: §4.1 FIG 2 ======== -->
+<div class="slide" data-page="15">
+  <h2 class="st">§4.1 Biểu Đồ Phân Tán — Mỗi Kênh vs Sales</h2>
+  <div class="fig">
+    <img src="../output/fig2_scatter_per_channel.png" style="max-height: 90mm;">
+    <div class="figc">Figure 2 — Scatter Plots: mỗi kênh vs Sales với đường OLS trend</div>
+  </div>
+  <div class="cols" style="margin-top: 4px;">
+    <div class="col">
+      <div class="boxg">
+        <p class="sm"><strong>TV (trái):</strong> Độ dốc mạnh, tập trung gần đường. SLR R² = 0.612. Mỗi $1K → +47 đơn vị.</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="box">
+        <p class="sm"><strong>Radio (giữa):</strong> Dương vừa phải, R² = 0.332. Hiệu quả cao nhưng nhiều biến động hơn.</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="boxr">
+        <p class="sm"><strong>Newspaper (phải):</strong> Gần phẳng, R² = 0.052. Tăng ngân sách → không thay đổi hệ thống.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 16: §4.1 FIG 3 CORRELATION ======== -->
+<div class="slide" data-page="16">
+  <h2 class="st">§4.1 Ma Trận Tương Quan Pearson</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="fig">
+        <img src="../output/fig3_correlation_heatmap.png" style="max-height: 110mm;">
+        <div class="figc">Figure 3 — Pearson Correlation Heatmap</div>
+      </div>
+    </div>
+    <div class="col">
+      <table style="margin-top: 10px;">
+        <tr><th>Cặp biến</th><th>r</th><th>Ý nghĩa</th></tr>
+        <tr><td>TV ↔ Sales</td><td>0.782</td><td>Mạnh nhất</td></tr>
+        <tr><td>Radio ↔ Sales</td><td>0.576</td><td>Hữu ích</td></tr>
+        <tr><td>Newspaper ↔ Sales</td><td>0.228</td><td>Yếu</td></tr>
+        <tr><td><strong>Radio ↔ NP</strong></td><td><strong>0.354</strong></td><td><strong>Gây nhiễu!</strong></td></tr>
+      </table>
+      <div class="boxr" style="margin-top: 10px;">
+        <h3>Yếu tố gây nhiễu quan trọng</h3>
+        <p>Radio ↔ Newspaper r = 0.354. Thị trường chi nhiều Radio cũng chi nhiều Newspaper → Newspaper "mượn" tín dụng Radio trong SLR!</p>
+        <p style="margin-top: 4px;">Sẽ giải thích chi tiết trong <strong>Q3</strong>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 17: §4.2 & §4.3 PREPROCESSING ======== -->
+<div class="slide" data-page="17">
+  <h2 class="st">§4.2 Tiền Xử Lý &amp; §4.3 Khớp Mô Hình</h2>
+  <div class="cols">
+    <div class="col">
+      <h3>§4.2 Train/Test Split</h3>
+      <div class="formula" style="font-size: 8.5pt;">
+        X = df[['TV', 'Radio', 'Newspaper']]<br>
+        y = df['Sales']<br><br>
+        X_train, X_test, y_train, y_test =<br>
+        &nbsp;&nbsp;train_test_split(X, y, test_size=0.2,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;random_state=42)<br><br>
+        # Training: 160 markets<br>
+        # Test: 40 markets (niêm phong đến Q5)
+      </div>
+      <div class="box" style="margin-top: 6px;">
+        <p class="sm">Tập test niêm phong cho đến Q5 — sử dụng trước sẽ tạo ra ước tính <strong>quá lạc quan</strong>.</p>
+      </div>
+    </div>
+    <div class="col">
+      <h3>§4.3 Các mô hình được khớp</h3>
+      <div class="formula" style="font-size: 8.5pt;">
+        # SLR: từng kênh (Q1, Q3)<br>
+        model_tv &nbsp;&nbsp;= ols("Sales ~ TV").fit()<br>
+        model_radio = ols("Sales ~ Radio").fit()<br>
+        model_news &nbsp;= ols("Sales ~ Newspaper").fit()<br><br>
+        # MLR: tất cả kênh (Q1–Q6)<br>
+        model_mlr = ols("Sales ~ TV + Radio<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;+ Newspaper").fit()<br><br>
+        # Interaction: synergy (Q7)<br>
+        model_int = ols("Sales ~ TV + Radio<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;+ Newspaper + TV:Radio").fit()
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 18: §5 DIVIDER ======== -->
+<div class="slide divider" data-page="18">
+  <h2>§5. Kết Quả — Q1 đến Q7</h2>
+  <div class="divider-sub">ISL Marketing Plan: F-test, R², phân bổ kênh, dự báo, LINE, Synergy</div>
+</div>
+
+<!-- ======== SLIDE 19: §5.1 Q1 ======== -->
+<div class="slide" data-page="19">
+  <h2 class="st">§5.1 Q1 — Có mối quan hệ giữa quảng cáo và doanh số không?</h2>
+  <p><strong>Bối cảnh:</strong> Trước khi phân bổ lại, cần bằng chứng quảng cáo thực sự gây ra biến động doanh số.</p>
+  <div class="formula" style="font-size: 9pt;">
+    H₀: β_TV = β_Radio = β_Newspaper = 0 &nbsp;&nbsp;(quảng cáo không tác động)<br>
+    H₁: Ít nhất một βⱼ ≠ 0 &nbsp;&nbsp;(ít nhất một kênh quan trọng)
+  </div>
+  <div class="cols" style="margin-top: 6px;">
+    <div class="col">
+      <table>
+        <tr><th>Thống kê</th><th>Giá trị</th><th>Diễn giải</th></tr>
+        <tr><td>F(3, 196)</td><td><strong>570.3</strong></td><td>Tốt hơn 570× dự báo mean</td></tr>
+        <tr><td>p-value</td><td><strong>&lt; .001</strong></td><td>Bằng chứng áp đảo, bác bỏ H₀</td></tr>
+        <tr><td>R²</td><td><strong>0.8972</strong></td><td>89.7% biến động được giải thích</td></tr>
+        <tr><td>Adj R²</td><td><strong>0.8956</strong></td><td>89.6% — không overfitting</td></tr>
+      </table>
+    </div>
+    <div class="col">
+      <div class="boxg">
+        <span class="tag tagg">GO</span>
+        <h3>Quyết định kinh doanh</h3>
+        <p>Chi tiêu quảng cáo là <strong>yếu tố được chứng minh</strong> thúc đẩy doanh số. P-value ≈ 0 — có &lt; 0.001% khả năng do ngẫu nhiên. Chỉ ~10% chênh lệch doanh số do yếu tố không quan sát.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 20: §5.2 Q2 ======== -->
+<div class="slide" data-page="20">
+  <h2 class="st">§5.2 Q2 — Mối quan hệ mạnh đến mức nào?</h2>
+  <p><strong>Bối cảnh:</strong> Mô hình giải thích 50% thì thú vị; 90% thì triển khai thương mại được.</p>
+  <div class="cols" style="margin-top: 4px;">
+    <div class="col">
+      <table>
+        <tr><th>Chỉ số</th><th>Giá trị</th><th>Ý nghĩa</th></tr>
+        <tr><td>R²</td><td>0.8972</td><td>90% biến động giải thích</td></tr>
+        <tr><td>Adj R²</td><td>0.8956</td><td>Không overfitting</td></tr>
+        <tr><td>RSE</td><td>1,685.5</td><td>Sai số ±$1,686/thị trường</td></tr>
+        <tr><td>Sai số tương đối</td><td>12.0%</td><td>Dự báo trong ±12%</td></tr>
+      </table>
+      <h3 style="margin-top: 6px;">Tại sao cần phân tích đa kênh?</h3>
+      <table>
+        <tr><th>Mô hình</th><th>R²</th><th>RMSE</th></tr>
+        <tr><td>TV only</td><td>0.612</td><td>3.26K</td></tr>
+        <tr><td>Radio only</td><td>0.332</td><td>4.28K</td></tr>
+        <tr><td>NP only</td><td>0.052</td><td>5.09K</td></tr>
+        <tr><td><strong>MLR 3 kênh</strong></td><td><strong>0.897</strong></td><td><strong>1.69K</strong></td></tr>
+      </table>
+    </div>
+    <div class="col">
+      <div class="fig">
+        <img src="../output/fig_q2_model_comparison.png" style="max-height: 90mm;">
+        <div class="figc">Figure 4 — SLR vs MLR: R² và RMSE</div>
+      </div>
+      <div class="boxg">
+        <p class="sm"><strong>Kết luận:</strong> Triển khai được. R² = 0.90, sai số ±12%. Phải dùng <strong>cả 3 kênh cùng lúc</strong>!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 21: §5.3 Q3 (1/3) SLR vs MLR ======== -->
+<div class="slide" data-page="21">
+  <h2 class="st">§5.3 Q3 — Kênh nào liên quan đến doanh số? (1/3)</h2>
+  <p><strong>Bối cảnh:</strong> Câu hỏi phân bổ ngân sách cốt lõi. Kênh nào thực sự thúc đẩy doanh số?</p>
+  <div class="cols" style="margin-top: 6px;">
+    <div class="col">
+      <h3>Bước 1 — SLR (riêng lẻ)</h3>
+      <table>
+        <tr><th>Kênh</th><th>β̂₁</th><th>R²</th><th>p-value</th><th>Return/$1K</th></tr>
+        <tr><td>TV</td><td>0.0475</td><td>0.612</td><td>&lt; .001</td><td>+47.5</td></tr>
+        <tr><td>Radio</td><td>0.2025</td><td>0.332</td><td>&lt; .001</td><td>+202.5</td></tr>
+        <tr><td>Newspaper</td><td>0.0547</td><td>0.052</td><td>&lt; .001</td><td>+54.7</td></tr>
+      </table>
+      <div class="boxr" style="margin-top: 6px;">
+        <p class="sm">&#9888; Cả 3 có ý nghĩa trong SLR — <strong>gây hiểu lầm</strong> cho Newspaper!</p>
+      </div>
+    </div>
+    <div class="col">
+      <h3>Bước 2 — MLR (đồng thời)</h3>
+      <table>
+        <tr><th>Kênh</th><th>β̂</th><th>p-value</th><th>95% CI</th><th>Kết luận</th></tr>
+        <tr><td><strong>TV</strong></td><td><strong>0.0458</strong></td><td><strong>&lt;.001</strong></td><td>[.043,.049]</td><td><span class="tag tagg">Có ý nghĩa</span></td></tr>
+        <tr><td><strong>Radio</strong></td><td><strong>0.1885</strong></td><td><strong>&lt;.001</strong></td><td>[.172,.206]</td><td><span class="tag tagg">Có ý nghĩa</span></td></tr>
+        <tr><td>NP</td><td>−0.001</td><td>.860</td><td>[−.013,.011]</td><td><span class="tag tagr">Không ý nghĩa</span></td></tr>
+      </table>
+      <div class="box" style="margin-top: 6px;">
+        <p class="sm"><strong>Gây nhiễu:</strong> Radio ↔ NP r=0.354. Khi MLR kiểm soát Radio → NP sụp đổ về 0. Hiệu ứng <strong>biến thay thế</strong> kinh điển.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 22: §5.3 Q3 (2/3) FIGURES ======== -->
+<div class="slide" data-page="22">
+  <h2 class="st">§5.3 Q3 — Biểu Đồ (2/3)</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="fig">
+        <img src="../output/fig_q3_slr_fits.png" style="max-height: 70mm;">
+        <div class="figc">Figure 5 — SLR Fit Lines với phần dư</div>
+      </div>
+      <div class="fig" style="margin-top: 4px;">
+        <img src="../output/fig_q3_channel_comparison.png" style="max-height: 65mm;">
+        <div class="figc">Figure 6 — ROI / R² / RMSE theo kênh</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="fig">
+        <img src="../output/fig_q3_coef_plot.png" style="max-height: 90mm;">
+        <div class="figc">Figure 7 — MLR Coefficient Plot + 95% CI</div>
+      </div>
+      <div class="box" style="margin-top: 4px;">
+        <p class="sm">TV &amp; Radio: thanh nằm hoàn toàn bên phải đường 0 → tác động thực sự. Newspaper: bắt qua 0 → không phân biệt với nhiễu.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 23: §5.3 Q3 (3/3) RANKING ======== -->
+<div class="slide" data-page="23">
+  <h2 class="st">§5.3 Q3 — Xếp Hạng Hiệu Quả &amp; Quyết Định (3/3)</h2>
+  <table style="font-size: 10.5pt; margin-top: 8px;">
+    <tr><th>Xếp hạng</th><th>Kênh</th><th>MLR β̂ (mỗi $1K)</th><th>Ý nghĩa</th><th>Khuyến nghị ngân sách</th></tr>
+    <tr><td>1</td><td><strong>Radio</strong></td><td>+0.1885 (+189 đơn vị)</td><td>p &lt; .001</td><td><strong>TANG</strong> — ROI/$1K cao nhất</td></tr>
+    <tr><td>2</td><td><strong>TV</strong></td><td>+0.0458 (+46 đơn vị)</td><td>p &lt; .001</td><td><strong>DUY TRI / TANG</strong> — động lực khối lượng</td></tr>
+    <tr><td>3</td><td>Newspaper</td><td>−0.0010 (~0 đơn vị)</td><td>p = .860</td><td><strong>LOAI BO</strong> — ROI = 0</td></tr>
+  </table>
+  <div class="boxg" style="margin-top: 14px;">
+    <h3>Quyết định kinh doanh</h3>
+    <p>Chuyển <strong>100% ngân sách Newspaper</strong> sang Radio và TV. Mỗi đô la chuyển từ Newspaper (0 return) sang Radio (+189 đơn vị/$1K) <strong>trực tiếp tăng tổng doanh số</strong>.</p>
+    <p style="margin-top: 4px;">TV vẫn thiết yếu — thúc đẩy 61% biến động doanh số và neo hiệu ứng synergy (Q7).</p>
+  </div>
+</div>
+
+<!-- ======== SLIDE 24: §5.4 Q4 ======== -->
+<div class="slide" data-page="24">
+  <h2 class="st">§5.4 Q4 — Tác động mỗi kênh lớn bao nhiêu &amp; chính xác đến đâu?</h2>
+  <p><strong>Bối cảnh:</strong> Lãnh đạo cần số chính xác: bao nhiêu đơn vị mỗi $1K? Tự tin đến đâu?</p>
+  <div class="cols" style="margin-top: 6px;">
+    <div class="col">
+      <h3>95% Confidence Intervals</h3>
+      <table>
+        <tr><th>Kênh</th><th>β̂ (đơn vị/$1K)</th><th>95% CI</th><th>Khoảng</th></tr>
+        <tr><td><strong>TV</strong></td><td>+46</td><td>[+0.043, +0.049]</td><td>+43 đến +49</td></tr>
+        <tr><td><strong>Radio</strong></td><td>+189</td><td>[+0.172, +0.206]</td><td>+172 đến +206</td></tr>
+        <tr><td>NP</td><td>~0</td><td>[−0.013, +0.011]</td><td>−13 đến +11</td></tr>
+      </table>
+      <h3 style="margin-top: 6px;">VIF — Multicollinearity</h3>
+      <p>TV = 1.00, Radio = 1.14, NP = 1.15 — tất cả <strong>&lt; 5</strong> ✓</p>
+    </div>
+    <div class="col">
+      <h3>Kịch bản lập kế hoạch ngân sách</h3>
+      <table>
+        <tr><th>Kênh</th><th>Tăng</th><th>Dự kiến</th><th>95% range</th></tr>
+        <tr><td>TV</td><td>+$50K</td><td>+2,290</td><td>[2,150–2,425]</td></tr>
+        <tr><td>TV</td><td>+$100K</td><td>+4,580</td><td>[4,300–4,850]</td></tr>
+        <tr><td>Radio</td><td>+$20K</td><td>+3,770</td><td>[3,434–4,108]</td></tr>
+        <tr><td>Radio</td><td>+$30K</td><td>+5,655</td><td>[5,151–6,162]</td></tr>
+        <tr><td>NP</td><td>Bất kỳ</td><td>~0</td><td>[−1,250–+1,050]</td></tr>
+      </table>
+      <div class="boxg" style="margin-top: 6px;">
+        <p class="sm"><strong>Radio hiệu quả 4.1× so với TV</strong> trên mỗi đô la. Nhưng TV hoạt động ở quy mô lớn hơn nhiều ($0–$296K).</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 25: §5.5 Q5 ======== -->
+<div class="slide" data-page="25">
+  <h2 class="st">§5.5 Q5 — Dự báo doanh số tương lai chính xác không?</h2>
+  <p><strong>Bối cảnh:</strong> R² = 0.90 trên dữ liệu lịch sử — nhưng dự báo thị trường mới có chính xác không?</p>
+  <div class="cols" style="margin-top: 4px;">
+    <div class="col">
+      <h3>Test set (40 thị trường chưa thấy)</h3>
+      <table>
+        <tr><th>Chỉ số</th><th>Train (160)</th><th>Test (40)</th><th>Gap</th></tr>
+        <tr><td>RMSE</td><td>1.6447K</td><td>1.7816K</td><td>0.137K</td></tr>
+        <tr><td>R²</td><td>0.8957</td><td>0.8994</td><td>+0.004</td></tr>
+        <tr><td>MAE</td><td>—</td><td>1.4608K</td><td>±$1,461</td></tr>
+      </table>
+      <h3 style="margin-top: 6px;">LR vs KNN</h3>
+      <table>
+        <tr><th>Mô hình</th><th>RMSE</th><th>R²</th><th>Diễn giải?</th></tr>
+        <tr><td><strong>LR</strong></td><td><strong>1.782K</strong></td><td><strong>0.899</strong></td><td>Có — β̂, CI, p</td></tr>
+        <tr><td>KNN K=4</td><td>1.419K</td><td>0.936</td><td>Không — hộp đen</td></tr>
+      </table>
+      <div class="box" style="margin-top: 4px;">
+        <p class="sm"><strong>Ví dụ:</strong> TV=$200K, Radio=$30K, NP=$10K → <strong>17.74K đơn vị</strong> ±$1,782</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="fig">
+        <img src="../output/fig_q5_lr_vs_knn.png" style="max-height: 68mm;">
+        <div class="figc">Figure 9 — LR vs KNN: Actual vs Predicted</div>
+      </div>
+      <div class="fig">
+        <img src="../output/fig_q5_knn_cv.png" style="max-height: 55mm;">
+        <div class="figc">Figure 8 — KNN CV Curve (K=4 tối ưu)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 26: §5.6 Q6 ======== -->
+<div class="slide" data-page="26">
+  <h2 class="st">§5.6 Q6 — Mô hình tuyến tính có phù hợp không? (LINE Diagnostics)</h2>
+  <p><strong>Bối cảnh:</strong> Tất cả Q1–Q5 dựa trên giả định OLS. Nếu vi phạm → p-values, CIs không hợp lệ.</p>
+  <div class="cols" style="margin-top: 4px;">
+    <div class="col" style="flex: 0.85;">
+      <table>
+        <tr><th>Giả định</th><th>Test</th><th>Kết quả</th><th></th></tr>
+        <tr><td><strong>L</strong>inearity</td><td>Res. vs Fitted</td><td>Ngẫu nhiên</td><td>✓</td></tr>
+        <tr><td><strong>I</strong>ndependence</td><td>Durbin-Watson</td><td>d = 2.084</td><td>✓</td></tr>
+        <tr><td><strong>N</strong>ormality</td><td>Shapiro-Wilk</td><td>W=.918, p=.000</td><td>⚠</td></tr>
+        <tr><td><strong>E</strong>qual var.</td><td>Breusch-Pagan</td><td>p = .162</td><td>✓</td></tr>
+        <tr><td>VIF</td><td>All predictors</td><td>1.00–1.15</td><td>✓</td></tr>
+      </table>
+      <div class="box" style="margin-top: 6px;">
+        <p class="sm"><strong>Shapiro-Wilk ⚠:</strong> Rất nhạy ở n=200. Q-Q chỉ lệch nhẹ ở đuôi. CLT đảm bảo suy luận xấp xỉ hợp lệ. KNN (phi tham số) → kết quả tương tự → xác nhận mô hình hợp lệ.</p>
+      </div>
+    </div>
+    <div class="col" style="flex: 1.15;">
+      <div class="fig">
+        <img src="../output/fig_q6_diagnostics.png" style="max-height: 125mm;">
+        <div class="figc">Figure 10 — LINE Diagnostic Plots (4 bảng)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 27: §5.7 Q7 (1/2) ======== -->
+<div class="slide" data-page="27">
+  <h2 class="st">§5.7 Q7 — Có Synergy giữa các kênh không? (1/2)</h2>
+  <p><strong>Bối cảnh:</strong> MLR cộng giả định mỗi kênh độc lập. Thực tế, TV + Radio đồng thời → nhiều hơn tổng riêng lẻ?</p>
+  <div class="formula" style="font-size: 9pt;">Sales = β₀ + β₁(TV) + β₂(Radio) + β₃(NP) + β₄(TV × Radio) + ε</div>
+  <div class="cols" style="margin-top: 6px;">
+    <div class="col">
+      <h3>Hệ số mô hình tương tác</h3>
+      <table>
+        <tr><th>Biến</th><th>β̂</th><th>p-value</th><th>Diễn giải</th></tr>
+        <tr><td>TV</td><td>0.0191</td><td>&lt;.001</td><td>TV khi Radio=0: +19/$1K</td></tr>
+        <tr><td>Radio</td><td>0.0289</td><td>.001</td><td>Radio khi TV=0: +29/$1K</td></tr>
+        <tr><td>NP</td><td>−0.001</td><td>.862</td><td>Vẫn không ý nghĩa</td></tr>
+        <tr><td><strong>TV×Radio</strong></td><td><strong>0.001087</strong></td><td><strong>&lt;.001</strong></td><td><strong>Synergy xác nhận!</strong></td></tr>
+      </table>
+      <h3 style="margin-top: 6px;">Cải thiện mô hình</h3>
+      <table>
+        <tr><th>Mô hình</th><th>R²</th><th>RMSE</th></tr>
+        <tr><td>MLR cộng</td><td>0.8972</td><td>1.69K</td></tr>
+        <tr><td><strong>+TV×Radio</strong></td><td><strong>0.9678</strong></td><td><strong>~0.93K</strong></td></tr>
+      </table>
+      <p class="sm"><strong>+7.1% R², −45% RMSE</strong> — cải thiện đơn lớn nhất!</p>
+    </div>
+    <div class="col">
+      <h3>Tác động biên tế TV theo Radio</h3>
+      <p class="sm">∂Sales/∂TV = β̂₁ + β̂₄ × Radio</p>
+      <table>
+        <tr><th>Radio</th><th>TV return/$1K</th><th>Hệ số nhân</th></tr>
+        <tr><td>$0K</td><td>+19</td><td>1.0×</td></tr>
+        <tr><td>$10K</td><td>+30</td><td>1.6×</td></tr>
+        <tr><td>$20K</td><td>+41</td><td>2.2×</td></tr>
+        <tr><td><strong>$30K</strong></td><td><strong>+52</strong></td><td><strong>2.7×</strong></td></tr>
+        <tr><td>$40K</td><td>+63</td><td>3.3×</td></tr>
+      </table>
+      <div class="boxg" style="margin-top: 4px;">
+        <p class="sm">Tại Radio=$30K: mỗi $1K TV → <strong>2.7× lợi nhuận</strong> so với không có Radio!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 28: §5.7 Q7 (2/2) SYNERGY ======== -->
+<div class="slide" data-page="28">
+  <h2 class="st">§5.7 Q7 — Synergy: Phần Thưởng 24.2% (2/2)</h2>
+  <div class="cols">
+    <div class="col">
+      <h3>Kịch bản $100K TV + $30K Radio</h3>
+      <table style="font-size: 10pt;">
+        <tr><th>Thành phần</th><th>Tính toán</th><th>Đóng góp</th></tr>
+        <tr><td>TV main</td><td>0.0458 × 100</td><td>4.58K</td></tr>
+        <tr><td>Radio main</td><td>0.1885 × 30</td><td>5.66K</td></tr>
+        <tr><td><strong>Synergy</strong></td><td><strong>0.001087×100×30</strong></td><td><strong>3.26K</strong></td></tr>
+        <tr><td><strong>Tổng</strong></td><td></td><td><strong>13.49K</strong></td></tr>
+        <tr><td><strong>Synergy share</strong></td><td>3.26 / 13.49</td><td><strong>24.2%</strong></td></tr>
+      </table>
+      <div class="boxg" style="margin-top: 8px;">
+        <h3>Quyết định</h3>
+        <p><strong>1 trong 4 đơn vị</strong> doanh số từ quảng cáo đến từ tương tác TV×Radio — doanh thu <strong>miễn phí</strong> chỉ cần đồng lịch!</p>
+        <p style="margin-top: 4px;">Newspaper vẫn không liên quan (p = .862).</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="fig">
+        <img src="../output/fig_q7_synergy.png" style="max-height: 125mm;">
+        <div class="figc">Figure 11 — R² Progression + TV Marginal Effect</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 29: §6 DIVIDER ======== -->
+<div class="slide divider" data-page="29">
+  <h2>§6. Tóm Tắt Điều Hành</h2>
+  <div class="divider-sub">Bảng tóm tắt 7 câu hỏi, 5 khuyến nghị chiến lược, tác động dự kiến</div>
+</div>
+
+<!-- ======== SLIDE 30: §6.1 SUMMARY TABLE ======== -->
+<div class="slide" data-page="30">
+  <h2 class="st">§6.1 Bảng Tóm Tắt — Bảy Câu Hỏi Đã Giải Đáp</h2>
+  <table style="font-size: 10pt; margin-top: 6px;">
+    <tr><th>Q</th><th>Câu hỏi</th><th>Trả lời</th><th>Kết quả chính</th></tr>
+    <tr><td>Q1</td><td>Quảng cáo thúc đẩy doanh số?</td><td><strong>Có — mạnh mẽ</strong></td><td>F = 570.3, p &lt; .001</td></tr>
+    <tr><td>Q2</td><td>Mạnh đến mức nào?</td><td><strong>Triển khai được</strong></td><td>R² = 0.897, RSE = 1.686K</td></tr>
+    <tr><td>Q3</td><td>Kênh nào quan trọng?</td><td><strong>TV &amp; Radio</strong></td><td>Newspaper p = .860</td></tr>
+    <tr><td>Q4</td><td>Tác động bao lớn?</td><td><strong>Radio 4× TV</strong></td><td>Radio +189; TV +46 /$1K</td></tr>
+    <tr><td>Q5</td><td>Dự báo thị trường mới?</td><td><strong>±$1,782</strong></td><td>Test RMSE = 1.782K, R² = 0.899</td></tr>
+    <tr><td>Q6</td><td>Mô hình hợp lệ?</td><td><strong>Có</strong></td><td>DW=2.08✓, BP p=.16✓</td></tr>
+    <tr><td>Q7</td><td>Có Synergy?</td><td><strong>24.2% bonus</strong></td><td>ΔR² = +0.071</td></tr>
+  </table>
+  <div class="fig" style="margin-top: 4px;">
+    <img src="../output/fig13_executive_dashboard.png" style="max-height: 68mm;">
+    <div class="figc">Figure 12 — Executive Summary Dashboard</div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 31: §6.2 RECOMMENDATIONS ======== -->
+<div class="slide" data-page="31">
+  <h2 class="st">§6.2 Kế Hoạch Marketing — 5 Khuyến Nghị Chiến Lược</h2>
+  <table style="font-size: 9.5pt; margin-top: 4px;">
+    <tr><th style="width:28px">#</th><th style="width:165px">Khuyến nghị</th><th>Chi tiết</th></tr>
+    <tr><td><strong>1</strong></td><td><strong>Loại bỏ Newspaper</strong></td><td>β̂ = −0.001, p = .860. Proxy cho Radio (r = 0.354). Chuyển $30.5K → Radio/TV.</td></tr>
+    <tr><td><strong>2</strong></td><td><strong>Ưu tiên Radio</strong></td><td>+189 đơn vị/$1K — 4.1× hiệu quả hơn TV. Tăng thị trường dưới $22.9K.</td></tr>
+    <tr><td><strong>3</strong></td><td><strong>Duy trì TV mạnh</strong></td><td>Động lực khối lượng chính (R² = 0.612 riêng). Kích hoạt Synergy multiplier.</td></tr>
+    <tr><td><strong>4</strong></td><td><strong>Đồng lịch TV + Radio</strong></td><td>Synergy 24.2%. Radio=$30K → TV return 2.7×. Chi phí thêm = $0.</td></tr>
+    <tr><td><strong>5</strong></td><td><strong>Triển khai dự báo</strong></td><td>Test R² = 0.899, RMSE = $1,782. Đủ chính xác cho phân bổ ngân sách hàng quý.</td></tr>
+  </table>
+  <div class="boxg" style="margin-top: 8px;">
+    <h3>§6.3 Tác Động Dự Kiến: +25% doanh số, tổng chi tiêu không đổi</h3>
+    <div class="cols" style="margin-top: 4px;">
+      <div class="col">
+        <table style="font-size: 9pt;">
+          <tr><th>Hạng mục</th><th>Trước</th><th>Sau</th><th>Δ</th></tr>
+          <tr><td>TV</td><td>$147K</td><td>$162K</td><td>+$15K</td></tr>
+          <tr><td>Radio</td><td>$23.3K</td><td>$38.3K</td><td>+$15K</td></tr>
+          <tr><td>Newspaper</td><td>$30.5K</td><td>$0K</td><td>−$30.5K</td></tr>
+          <tr><td><strong>Total</strong></td><td><strong>$200.8K</strong></td><td><strong>$200.3K</strong></td><td><strong>−$0.5K</strong></td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <p style="font-size: 9.5pt;">
+          TV: +0.0458×15 = <strong>+0.687K</strong><br>
+          Radio: +0.1885×15 = <strong>+2.828K</strong><br>
+          NP removed: <strong>+0.031K</strong><br><br>
+          <strong>Tổng: +3.546K đơn vị/thị trường</strong><br>
+          = <strong>+25.3%</strong> trên 14.02K hiện tại<br>
+          Với synergy: có thể vượt +4K!
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 32: §7 DIVIDER ======== -->
+<div class="slide divider" data-page="32">
+  <h2>§7. Hạn Chế &amp; Tương Lai</h2>
+  <div class="divider-sub">Những giới hạn của nghiên cứu và hướng phát triển tiếp theo</div>
+</div>
+
+<!-- ======== SLIDE 33: §7.1 & §7.2 LIMITATIONS ======== -->
+<div class="slide" data-page="33">
+  <h2 class="st">§7.1 Hạn Chế &amp; §7.2 Hướng Nghiên Cứu Tương Lai</h2>
+  <div class="cols">
+    <div class="col">
+      <h3>§7.1 Hạn chế</h3>
+      <ul>
+        <li><strong>Dữ liệu quan sát</strong> — không tuyên bố nhân quả. Ngân sách không ngẫu nhiên hoá.</li>
+        <li><strong>Tính không chuẩn nhẹ</strong> — Shapiro-Wilk W=0.918, p=.000. CLT bảo vệ ở n=200.</li>
+        <li><strong>Không mô hình bão hoà</strong> — giả định lợi nhuận tuyến tính không đổi.</li>
+        <li><strong>Không có thời gian</strong> — carryover/lagged effects không đo được.</li>
+        <li><strong>KNN &gt; LR</strong> — RMSE 1.419K vs 1.782K cho thấy phi tuyến nhẹ.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>§7.2 Hướng nghiên cứu</h3>
+      <ol>
+        <li><strong>Polynomial terms</strong> (TV², Radio²) — hiệu ứng bão hoà</li>
+        <li><strong>Ridge / Lasso</strong> — regularisation khi mở rộng biến</li>
+        <li><strong>Panel models</strong> — fixed effects + lagged variables</li>
+        <li><strong>A/B test thực địa</strong> — ngân sách ngẫu nhiên → nhân quả</li>
+        <li><strong>Interaction screening</strong> — Radio×NP, TV×NP</li>
+      </ol>
+      <div class="box" style="margin-top: 10px;">
+        <h3>Tài liệu tham khảo chính</h3>
+        <p class="sm">[1] James, Witten, Hastie, Tibshirani — <em>ISL</em>, Springer 2023, Ch. 3<br>
+        + 16 tài liệu bổ sung (chi tiết trong báo cáo đầy đủ)</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 34: REFERENCES ======== -->
+<div class="slide" data-page="34">
+  <h2 class="st">Tài Liệu Tham Khảo (References)</h2>
+  <div class="cols">
+    <div class="col" style="font-size: 8pt; line-height: 1.65;">
+      <p>[1] G. James et al., <em>An Introduction to Statistical Learning with Applications in Python</em>, 2nd ed., Springer, 2023.</p>
+      <p>[2] "Application of MLR on Sales Prediction," <em>HBEM</em>, DRPress, 2024.</p>
+      <p>[3] Y. H. Yasser, "Advertising Sales Dataset," Kaggle, 2022.</p>
+      <p>[4] "Improved Linear Regression in Business Analysis," <em>Procedia CS</em>, Elsevier, 2023.</p>
+      <p>[5] "Advertising Investment and Sales," <em>JAEPS</em>, EWA Publishing, 2024.</p>
+      <p>[6] R. Vershynin, "All of Linear Regression," arXiv:1910.06386, 2019.</p>
+      <p>[7] M. Oyelaran, "EDA: Advertising Spend vs Sales," <em>Medium</em>, 2023.</p>
+      <p>[8] Google Developers, "Linear Regression," <em>ML Crash Course</em>, 2024.</p>
+      <p>[9] H. Thapa, "Ad Dataset: Linear Regression," <em>LinkedIn Pulse</em>, 2023.</p>
+    </div>
+    <div class="col" style="font-size: 8pt; line-height: 1.65;">
+      <p>[10] Scikit-learn Developers, "sklearn.linear_model.LinearRegression," 2023.</p>
+      <p>[11] N. Gaud, LinkedIn Profile — Data Science Practitioner, 2023.</p>
+      <p>[12] C. F. Gauss, <em>Theoria motus corporum coelestium</em>, 1809.</p>
+      <p>[13] A. E. Hoerl &amp; R. W. Kennard, "Ridge regression," <em>Technometrics</em>, 1970.</p>
+      <p>[14] P. A. Naik &amp; K. Raman, "Synergy in multimedia communications," <em>JMR</em>, 2003.</p>
+      <p>[15] R. Sethuraman et al., "Brand advertising elasticities," <em>JMR</em>, 2011.</p>
+      <p>[16] R. Tibshirani, "Regression shrinkage via Lasso," <em>JRSS B</em>, 1996.</p>
+      <p>[17] H. Zou &amp; T. Hastie, "Elastic net," <em>JRSS B</em>, 2005.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SLIDE 35: THANK YOU ======== -->
+<div class="slide title-slide" data-page="">
+  <h1>Xin Cảm Ơn!</h1>
+  <div class="subtitle">Truong Thi Ngoc Hang — Computational Statistics</div>
+  <div class="meta" style="margin-top: 20px;">
+    <strong>Keywords:</strong> Multiple Linear Regression, OLS, Advertising ROI,<br>
+    Sales Prediction, Synergy, Marketing Analytics, ISL<br><br>
+    <strong>Dataset:</strong> Advertising Budget and Sales — 200 Markets<br>
+    <strong>Primary Reference:</strong> James et al. (2023), ISL Ch. 3
+  </div>
+</div>
+
+</body>
+</html>

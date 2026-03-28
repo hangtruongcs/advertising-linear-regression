@@ -41,11 +41,6 @@ Activate it:
 # macOS / Linux
 source .venv/bin/activate
 
-# Windows (PowerShell)
-.\.venv\Scripts\Activate.ps1
-
-# Windows (CMD)
-.\.venv\Scripts\activate.bat
 ```
 
 You should see `(.venv)` at the start of your terminal prompt.
@@ -119,7 +114,6 @@ advertising-linear-regression/
 ├── report/
 │   
 ├── src/                                   # Source modules (if any)
-├── tests/                                 # Unit tests (if any)
 ├── pyproject.toml                         # Project metadata and dependencies
 ├── SETUP.md                               # This file
 └── README.md                              # Project overview

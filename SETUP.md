@@ -91,12 +91,14 @@ Or open VS Code manually and use **File > Open Folder** to select the project di
 
 ## 6. Select the Kernel and Run the Notebook
 
-1. Open `notebooks/ch3_linear_regression.ipynb`
+1. Open `notebooks/advertising_analysis.ipynb` (main analysis — 31 cells, all outputs executed)
 2. Click the **kernel selector** in the top-right corner of the notebook
 3. Select **"Python (advertising-lr)"** from the list
 4. Click **Run All** (the double-play button) or press `Shift + Alt + Enter`
 
 If the kernel doesn't appear, reload VS Code (`Cmd+Shift+P` > `Developer: Reload Window`).
+
+**Note:** Alternative notebook `notebooks/linear_regression.ipynb` is available for reference.
 
 ---
 
